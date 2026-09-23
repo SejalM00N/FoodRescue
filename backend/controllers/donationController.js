@@ -1,7 +1,6 @@
 const Donation = require("../models/Donation");
 const cloudinary = require("../config/cloudinary");
 
-// Upload image buffer to Cloudinary
 const uploadToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -10,11 +9,8 @@ const uploadToCloudinary = (buffer) => {
         resource_type: "image",
       },
       (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
+        if (error) reject(error);
+        else resolve(result);
       },
     );
 
@@ -22,7 +18,21 @@ const uploadToCloudinary = (buffer) => {
   });
 };
 
-// Create a donation
+const expireOverdueDonations = async (filter = {}) => {
+  await Donation.updateMany(
+    {
+      ...filter,
+      status: { $in: ["available", "requested"] },
+      pickupDeadline: { $lte: new Date() },
+    },
+    {
+      $set: {
+        status: "expired",
+      },
+    },
+  );
+};
+
 const createDonation = async (req, res) => {
   try {
     const {
@@ -38,7 +48,6 @@ const createDonation = async (req, res) => {
 
     let imageUrl = "";
 
-    // Upload image to Cloudinary if an image was provided
     if (req.file) {
       const uploadedImage = await uploadToCloudinary(req.file.buffer);
       imageUrl = uploadedImage.secure_url;
@@ -71,17 +80,20 @@ const createDonation = async (req, res) => {
   }
 };
 
-// Get donations created by logged-in donor
 const getMyDonations = async (req, res) => {
   try {
+    await expireOverdueDonations({
+      donor: req.user.id,
+    });
+
     const donations = await Donation.find({
       donor: req.user.id,
     }).sort({ createdAt: -1 });
 
-    res.json({
-      donations,
-    });
+    res.json({ donations });
   } catch (error) {
+    console.error("Get my donations error:", error);
+
     res.status(500).json({
       message: "Failed to fetch donations",
       error: error.message,
@@ -89,19 +101,21 @@ const getMyDonations = async (req, res) => {
   }
 };
 
-// Get all available donations
 const getAvailableDonations = async (req, res) => {
   try {
+    await expireOverdueDonations();
+
     const donations = await Donation.find({
       status: "available",
+      pickupDeadline: { $gt: new Date() },
     })
       .populate("donor", "name")
       .sort({ createdAt: -1 });
 
-    res.json({
-      donations,
-    });
+    res.json({ donations });
   } catch (error) {
+    console.error("Get available donations error:", error);
+
     res.status(500).json({
       message: "Failed to fetch available donations",
       error: error.message,

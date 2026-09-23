@@ -4,6 +4,7 @@ import {
   Calendar,
   CheckCircle,
   Clock,
+  ImageOff,
   MapPin,
   Package,
   PlusCircle,
@@ -72,7 +73,11 @@ function MyDonations() {
       return "bg-[#e4edf8] text-[#0b306b]";
     }
 
-    return "bg-[#fff0d9] text-[#9a6500]";
+    if (status === "expired") {
+      return "bg-slate-200 text-slate-600";
+    }
+
+    return "bg-[#dcecf8] text-[#0b306b]";
   };
 
   const formatStatus = (status) => {
@@ -265,8 +270,16 @@ function MyDonations() {
                 >
                   {/* Food */}
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
-                      <Utensils size={22} />
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
+                      {donation.imageUrl ? (
+                        <img
+                          src={donation.imageUrl}
+                          alt={donation.foodName}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Utensils size={22} />
+                      )}
                     </div>
 
                     <div>
@@ -313,9 +326,7 @@ function MyDonations() {
         </section>
       </div>
 
-      {/* ---------------------------------------------------
-          Donation Details Modal
-      --------------------------------------------------- */}
+      {/* Donation Details Modal */}
       {selectedDonation && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b306b]/35 px-5 py-6 backdrop-blur-sm"
@@ -350,6 +361,22 @@ function MyDonations() {
 
             {/* Modal Content */}
             <div className="space-y-5 p-6 md:p-8">
+              {/* Food Image */}
+              {selectedDonation.imageUrl ? (
+                <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+                  <img
+                    src={selectedDonation.imageUrl}
+                    alt={selectedDonation.foodName}
+                    className="h-64 w-full object-cover md:h-72"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-56 flex-col items-center justify-center rounded-2xl bg-white/70 text-slate-400">
+                  <ImageOff size={38} />
+                  <p className="mt-3 text-sm">No food image was uploaded.</p>
+                </div>
+              )}
+
               {/* Status */}
               <div className="flex items-center justify-between rounded-2xl bg-white/70 p-5">
                 <div>
@@ -368,6 +395,20 @@ function MyDonations() {
                   {formatStatus(selectedDonation.status)}
                 </span>
               </div>
+
+              {/* Expired notice */}
+              {selectedDonation.status === "expired" && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-100 p-5">
+                  <p className="font-semibold text-slate-700">
+                    This donation has expired.
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    The pickup deadline has passed, so this donation is no
+                    longer available for new requests.
+                  </p>
+                </div>
+              )}
 
               {/* Basic information */}
               <div className="grid gap-4 sm:grid-cols-2">
@@ -456,23 +497,6 @@ function MyDonations() {
                     "No additional description was provided."}
                 </p>
               </div>
-
-              {/* Coordinates */}
-              {selectedDonation.location?.latitude !== undefined &&
-                selectedDonation.location?.longitude !== undefined &&
-                selectedDonation.location?.latitude !== null &&
-                selectedDonation.location?.longitude !== null && (
-                  <div className="rounded-2xl border border-[#4f81b7]/20 bg-[#eef5fb] p-4">
-                    <p className="text-xs font-medium text-slate-500">
-                      Location coordinates
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-600">
-                      {selectedDonation.location.latitude.toFixed(6)},{" "}
-                      {selectedDonation.location.longitude.toFixed(6)}
-                    </p>
-                  </div>
-                )}
 
               {/* Close */}
               <button
