@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Mail, Lock, ArrowLeft } from "lucide-react";
+import { User, Mail, Lock, Phone, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -9,6 +9,7 @@ function Register() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
@@ -18,10 +19,16 @@ function Register() {
     e.preventDefault();
 
     setError("");
+
+    if (!/^\d{10}$/.test(phone)) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await register(name, email, password);
+      await register(name, email, phone, password);
 
       // Registration successful → go to Login
       navigate("/login");
@@ -126,6 +133,34 @@ function Register() {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full bg-transparent outline-none placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile number */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                  Mobile number
+                </label>
+
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3">
+                  <Phone size={19} className="text-[#4f81b7]" />
+
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="Enter 10-digit mobile number"
+                    value={phone}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
+
+                      setPhone(value);
+                    }}
                     required
                     className="w-full bg-transparent outline-none placeholder:text-slate-400"
                   />

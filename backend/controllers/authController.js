@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 // Register
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, phone, password } = req.body;
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -23,7 +23,8 @@ const register = async (req, res) => {
 
     const user = await User.create({
       name,
-      email: normalizedEmail,
+      email,
+      phone,
       password: hashedPassword,
     });
 
@@ -87,6 +88,7 @@ const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || "",
         role: user.role,
       },
     });
@@ -138,6 +140,7 @@ const updateRole = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || "",
         role: user.role,
       },
     });

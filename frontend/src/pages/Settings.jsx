@@ -43,6 +43,7 @@ function Settings() {
 
   const [profileName, setProfileName] = useState(user?.name || "");
   const [profileEmail, setProfileEmail] = useState(user?.email || "");
+  const [profilePhone, setProfilePhone] = useState(user?.phone || "");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -115,8 +116,13 @@ function Settings() {
   };
 
   const handleProfileSave = async () => {
-    if (!profileName.trim() || !profileEmail.trim()) {
-      showError("Name and email are required.");
+    if (!profileName.trim() || !profileEmail.trim() || !profilePhone.trim()) {
+      showError("Name, email, and phone are required.");
+      return;
+    }
+
+    if (!/^\d{10}$/.test(profilePhone)) {
+      showError("Phone number must contain exactly 10 digits.");
       return;
     }
 
@@ -126,6 +132,8 @@ function Settings() {
       const response = await api.put("/users/profile", {
         name: profileName.trim(),
         email: profileEmail.trim(),
+        // phone: profilePhone.trim(),
+        phone: profilePhone,
       });
 
       updateUser(response.data.user);
@@ -429,6 +437,10 @@ function Settings() {
                 {user?.email || "No email available"}
               </p>
 
+              <p className="mt-1 text-sm text-slate-500">
+                {user?.phone || "No phone number available"}
+              </p>
+
               {user?.role && (
                 <span className="mt-3 inline-flex rounded-full bg-[#dcefeb] px-3 py-1 text-xs font-bold capitalize text-[#16796f]">
                   {user.role}
@@ -580,6 +592,31 @@ function Settings() {
                       type="email"
                       value={profileEmail}
                       onChange={(e) => setProfileEmail(e.target.value)}
+                      className="w-full bg-transparent outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                    Mobile number
+                  </label>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <span className="text-[#4f81b7]">+91</span>
+
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={profilePhone}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 10);
+
+                        setProfilePhone(value);
+                      }}
+                      placeholder="Enter 10-digit mobile number"
                       className="w-full bg-transparent outline-none"
                     />
                   </div>

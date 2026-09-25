@@ -19,10 +19,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Register without selecting a role
-  const register = async (name, email, password) => {
+  const register = async (name, email, phone, password) => {
     const response = await api.post("/auth/register", {
       name,
       email,
+      phone,
       password,
     });
 
@@ -69,7 +70,6 @@ export function AuthProvider({ children }) {
   };
 
   // Logout
-
   const logout = () => {
     localStorage.removeItem("foodrescue_token");
     localStorage.removeItem("foodrescue_user");

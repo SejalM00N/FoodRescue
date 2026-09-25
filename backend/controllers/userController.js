@@ -4,11 +4,17 @@ const bcrypt = require("bcryptjs");
 // Update profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, phone } = req.body;
 
-    if (!name || !email) {
+    if (!name || !email || !phone) {
       return res.status(400).json({
-        message: "Name and email are required",
+        message: "Name, email, and phone are required",
+      });
+    }
+
+    if (!/^\d{10}$/.test(phone)) {
+      return res.status(400).json({
+        message: "Phone number must contain exactly 10 digits",
       });
     }
 
@@ -31,8 +37,9 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    user.name = name;
-    user.email = email;
+    user.name = name.trim();
+    user.email = email.trim().toLowerCase();
+    user.phone = phone;
 
     await user.save();
 
@@ -42,6 +49,7 @@ const updateProfile = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || "",
         role: user.role,
         location: user.location || "",
         latitude: user.latitude,
@@ -96,6 +104,7 @@ const updateLocation = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || "",
         role: user.role,
         location: user.location,
         latitude: user.latitude,

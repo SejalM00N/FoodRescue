@@ -30,4 +30,7 @@ const donationRequestSchema = new mongoose.Schema(
   },
 );
 
+// Prevent the same NGO from requesting the same donation more than once
+donationRequestSchema.index({ donation: 1, ngo: 1 }, { unique: true });
+
 module.exports = mongoose.model("DonationRequest", donationRequestSchema);

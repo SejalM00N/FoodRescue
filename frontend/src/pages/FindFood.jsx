@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   Clock,
+  ImageOff,
   MapPin,
   Package,
   Search,
@@ -39,23 +40,13 @@ function FindFood() {
 
       let donationData = [];
 
-      // Case 1: backend returns an array directly
       if (Array.isArray(response.data)) {
         donationData = response.data;
-      }
-
-      // Case 2: backend returns { donations: [...] }
-      else if (Array.isArray(response.data?.donations)) {
+      } else if (Array.isArray(response.data?.donations)) {
         donationData = response.data.donations;
-      }
-
-      // Case 3: backend returns { data: [...] }
-      else if (Array.isArray(response.data?.data)) {
+      } else if (Array.isArray(response.data?.data)) {
         donationData = response.data.data;
-      }
-
-      // Case 4: backend returns { data: { donations: [...] } }
-      else if (Array.isArray(response.data?.data?.donations)) {
+      } else if (Array.isArray(response.data?.data?.donations)) {
         donationData = response.data.data.donations;
       }
 
@@ -82,7 +73,7 @@ function FindFood() {
       setSuccess("");
 
       await api.post("/donation-requests", {
-        donation: donationId,
+        donationId,
         message: "We would like to receive this food donation.",
       });
 
@@ -107,7 +98,9 @@ function FindFood() {
 
   const filteredDonations = Array.isArray(donations)
     ? donations.filter((donation) => {
-        const searchText = search.toLowerCase();
+        const searchText = search.toLowerCase().trim();
+
+        if (!searchText) return true;
 
         return (
           donation.foodName?.toLowerCase().includes(searchText) ||
@@ -233,12 +226,25 @@ function FindFood() {
                 key={donation._id}
                 className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/65 shadow-lg backdrop-blur-xl"
               >
-                <div className="relative flex h-44 items-center justify-center bg-gradient-to-br from-[#dcecf8] via-[#eef7f6] to-[#fdd8a5]">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/70 text-[#0b306b] shadow-sm backdrop-blur-md">
-                    <Utensils size={34} />
-                  </div>
+                {/* Food Image */}
+                <div className="relative h-52 overflow-hidden bg-gradient-to-br from-[#dcecf8] via-[#eef7f6] to-[#fdd8a5]">
+                  {donation.imageUrl ? (
+                    <img
+                      src={donation.imageUrl}
+                      alt={donation.foodName || "Food donation"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/70 text-[#0b306b] shadow-sm backdrop-blur-md">
+                        <ImageOff size={34} />
+                      </div>
+                    </div>
+                  )}
 
-                  <span className="absolute right-4 top-4 rounded-full bg-white/85 px-3 py-1.5 text-xs font-bold text-[#16796f] shadow-sm">
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
+
+                  <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-[#16796f] shadow-sm backdrop-blur-md">
                     Available
                   </span>
                 </div>
@@ -260,6 +266,7 @@ function FindFood() {
                     </div>
                   </div>
 
+                  {/* Donation Details */}
                   <div className="mt-5 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl bg-[#fdf6ec] p-3">
                       <p className="text-xs text-slate-400">Quantity</p>
@@ -272,28 +279,36 @@ function FindFood() {
                     <div className="rounded-2xl bg-[#fdf6ec] p-3">
                       <p className="text-xs text-slate-400">Location</p>
 
-                      <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-[#0b306b]">
-                        <MapPin size={14} />
+                      <p className="mt-1 flex items-start gap-1 text-sm font-semibold text-[#0b306b]">
+                        <MapPin size={14} className="mt-0.5 shrink-0" />
 
-                        {donation.location?.address || "Not specified"}
+                        <span>
+                          {donation.location?.address || "Not specified"}
+                        </span>
                       </p>
                     </div>
                   </div>
 
+                  {/* Pickup Deadline */}
                   <div className="mt-4 flex items-start gap-2 text-sm text-slate-500">
                     <Clock size={16} className="mt-0.5 shrink-0" />
 
                     <span>
-                      Pickup before {formatDeadline(donation.pickupDeadline)}
+                      Pickup before{" "}
+                      <span className="font-medium text-[#0b306b]">
+                        {formatDeadline(donation.pickupDeadline)}
+                      </span>
                     </span>
                   </div>
 
+                  {/* Description */}
                   {donation.description && (
                     <p className="mt-4 rounded-2xl bg-[#fdf6ec] p-3 text-sm text-slate-500">
                       {donation.description}
                     </p>
                   )}
 
+                  {/* Request */}
                   <button
                     onClick={() => handleRequestFood(donation._id)}
                     disabled={requestingId === donation._id}
