@@ -6,11 +6,12 @@ import {
   Package,
   Search,
   SlidersHorizontal,
-  Utensils,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import LocationPicker from "../LocationPicker";
 
 function FindFood() {
   const navigate = useNavigate();
@@ -22,8 +23,26 @@ function FindFood() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // NGO saved location
+  const [ngoLocation, setNgoLocation] = useState(null);
+  const [ngoLocationLoading, setNgoLocationLoading] = useState(true);
+
+  // Delivery-location modal
+  const [selectedDonation, setSelectedDonation] = useState(null);
+  const [locationMode, setLocationMode] = useState("");
+
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryLatitude, setDeliveryLatitude] = useState(null);
+  const [deliveryLongitude, setDeliveryLongitude] = useState(null);
+
+  const [locationError, setLocationError] = useState("");
+
+  // Map picker
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
   useEffect(() => {
     fetchDonations();
+    fetchNGOLocation();
   }, []);
 
   const fetchDonations = async () => {
@@ -66,28 +85,133 @@ function FindFood() {
     }
   };
 
-  const handleRequestFood = async (donationId) => {
+  const fetchNGOLocation = async () => {
     try {
-      setRequestingId(donationId);
+      setNgoLocationLoading(true);
+
+      const response = await api.get("/users/profile");
+
+      const user = response.data?.user || response.data;
+
+      console.log("NGO PROFILE LOCATION:", user);
+
+      if (user?.location && user?.latitude != null && user?.longitude != null) {
+        setNgoLocation({
+          address: user.location,
+          latitude: Number(user.latitude),
+          longitude: Number(user.longitude),
+        });
+      } else {
+        setNgoLocation(null);
+      }
+    } catch (error) {
+      console.error("Failed to load NGO location:", error);
+      setNgoLocation(null);
+    } finally {
+      setNgoLocationLoading(false);
+    }
+  };
+
+  const handleRequestFood = (donation) => {
+    setError("");
+    setSuccess("");
+    setLocationError("");
+    setShowLocationPicker(false);
+
+    setSelectedDonation(donation);
+
+    // Do not automatically select a location.
+    // The NGO must choose one of the two options.
+    setLocationMode("");
+    setDeliveryAddress("");
+    setDeliveryLatitude(null);
+    setDeliveryLongitude(null);
+  };
+
+  const handleUseSavedLocation = () => {
+    if (!ngoLocation) {
+      setLocationError("No saved location available.");
+      return;
+    }
+
+    setLocationError("");
+
+    setLocationMode("saved");
+    setDeliveryAddress(ngoLocation.address);
+    setDeliveryLatitude(ngoLocation.latitude);
+    setDeliveryLongitude(ngoLocation.longitude);
+  };
+
+  const handleOpenLocationPicker = () => {
+    setLocationError("");
+    setLocationMode("custom");
+    setShowLocationPicker(true);
+  };
+
+  const handleConfirmPickedLocation = (location) => {
+    setDeliveryAddress(location.address);
+    setDeliveryLatitude(Number(location.latitude));
+    setDeliveryLongitude(Number(location.longitude));
+
+    setLocationMode("custom");
+    setLocationError("");
+    setShowLocationPicker(false);
+  };
+
+  const handleCloseLocationPicker = () => {
+    setShowLocationPicker(false);
+  };
+
+  const handleConfirmRequest = async () => {
+    if (!selectedDonation) return;
+
+    if (
+      !deliveryAddress.trim() ||
+      deliveryLatitude == null ||
+      deliveryLongitude == null
+    ) {
+      setLocationError(
+        "Please select a valid delivery location before continuing.",
+      );
+      return;
+    }
+
+    try {
+      setRequestingId(selectedDonation._id);
+      setLocationError("");
       setError("");
       setSuccess("");
 
       await api.post("/donation-requests", {
-        donationId,
+        donationId: selectedDonation._id,
         message: "We would like to receive this food donation.",
+        deliveryLocation: {
+          address: deliveryAddress.trim(),
+          latitude: Number(deliveryLatitude),
+          longitude: Number(deliveryLongitude),
+        },
       });
 
       setSuccess("Food request sent successfully.");
 
       setDonations((currentDonations) =>
         Array.isArray(currentDonations)
-          ? currentDonations.filter((donation) => donation._id !== donationId)
+          ? currentDonations.filter(
+              (donation) => donation._id !== selectedDonation._id,
+            )
           : [],
       );
+
+      setSelectedDonation(null);
+      setShowLocationPicker(false);
+      setLocationMode("");
+      setDeliveryAddress("");
+      setDeliveryLatitude(null);
+      setDeliveryLongitude(null);
     } catch (error) {
       console.error("Food request failed:", error);
 
-      setError(
+      setLocationError(
         error.response?.data?.message ||
           "Could not send food request. Please try again.",
       );
@@ -310,7 +434,7 @@ function FindFood() {
 
                   {/* Request */}
                   <button
-                    onClick={() => handleRequestFood(donation._id)}
+                    onClick={() => handleRequestFood(donation)}
                     disabled={requestingId === donation._id}
                     className="mt-6 w-full cursor-pointer rounded-2xl bg-[#0b306b] py-3.5 font-semibold text-white shadow-md transition hover:bg-[#16796f] disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -324,6 +448,163 @@ function FindFood() {
           </div>
         )}
       </div>
+
+      {/* Delivery Location Modal */}
+      {selectedDonation && !showLocationPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b306b]/40 px-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2rem] border border-white/70 bg-[#fdf6ec]/95 p-6 shadow-2xl backdrop-blur-xl">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wider text-[#16796f]">
+                  Delivery Location
+                </p>
+
+                <h2 className="mt-1 text-2xl font-bold text-[#0b306b]">
+                  Where should this food be delivered?
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Select the location where you want this food delivered.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedDonation(null)}
+                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-white/70 text-slate-500 transition hover:bg-white hover:text-[#0b306b]"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            {/* Location Options */}
+            <div className="mt-6 space-y-3">
+              {/* Saved Location */}
+              <button
+                type="button"
+                onClick={handleUseSavedLocation}
+                disabled={!ngoLocation}
+                className={`w-full rounded-2xl border p-4 text-left transition ${
+                  locationMode === "saved"
+                    ? "border-[#16796f] bg-[#dcefeb]"
+                    : "border-slate-200 bg-white/70 hover:border-[#4f81b7]"
+                } ${
+                  !ngoLocation
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#16796f]">
+                    <MapPin size={19} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#0b306b]">
+                      Use my saved location
+                    </p>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      {ngoLocation?.address || "No saved location available"}
+                    </p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Map Location */}
+              <div
+                className={`w-full rounded-2xl border p-4 transition ${
+                  locationMode === "custom"
+                    ? "border-[#16796f] bg-[#dcefeb]"
+                    : "border-slate-200 bg-white/70"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0b306b]">
+                    <MapPin size={19} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#0b306b]">
+                      Choose delivery location
+                    </p>
+
+                    <p className="mt-1 text-sm leading-5 text-slate-500">
+                      Search or place a pin on the map to select the exact
+                      delivery point.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOpenLocationPicker}
+                  className="mt-4 w-full cursor-pointer rounded-2xl bg-[#16796f] py-3 font-semibold text-white transition hover:bg-[#0b306b]"
+                >
+                  {locationMode === "custom"
+                    ? "Change Location on Map"
+                    : "Choose Location on Map"}
+                </button>
+
+                {/* Selected Map Location */}
+                {locationMode === "custom" && deliveryAddress && (
+                  <div className="mt-3 rounded-xl bg-white/80 p-3">
+                    <p className="text-xs font-semibold text-[#0b306b]">
+                      Selected location
+                    </p>
+
+                    <p className="mt-1 text-sm leading-5 text-slate-600">
+                      {deliveryAddress}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Error */}
+            {locationError && (
+              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                {locationError}
+              </div>
+            )}
+
+            {/* Confirm */}
+            <button
+              type="button"
+              onClick={handleConfirmRequest}
+              disabled={
+                requestingId === selectedDonation._id ||
+                !deliveryAddress.trim() ||
+                deliveryLatitude == null ||
+                deliveryLongitude == null
+              }
+              className="mt-6 w-full rounded-2xl bg-[#0b306b] py-3.5 font-semibold text-white shadow-md transition hover:bg-[#16796f] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {requestingId === selectedDonation._id
+                ? "Sending Request..."
+                : "Confirm & Request Food"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Map Location Picker */}
+      {showLocationPicker && (
+        <LocationPicker
+          initialLocation={
+            deliveryLatitude != null && deliveryLongitude != null
+              ? {
+                  address: deliveryAddress,
+                  latitude: deliveryLatitude,
+                  longitude: deliveryLongitude,
+                }
+              : null
+          }
+          onConfirm={handleConfirmPickedLocation}
+          onClose={handleCloseLocationPicker}
+        />
+      )}
     </div>
   );
 }

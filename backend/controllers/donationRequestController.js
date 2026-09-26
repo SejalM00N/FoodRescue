@@ -5,11 +5,23 @@ const Delivery = require("../models/Delivery");
 // NGO requests a donation
 const createRequest = async (req, res) => {
   try {
-    const { donationId, message } = req.body;
+    const { donationId, message, deliveryLocation } = req.body;
 
     if (!donationId) {
       return res.status(400).json({
         message: "Donation ID is required",
+      });
+    }
+
+    // Delivery location is mandatory
+    if (
+      !deliveryLocation ||
+      !deliveryLocation.address ||
+      deliveryLocation.latitude == null ||
+      deliveryLocation.longitude == null
+    ) {
+      return res.status(400).json({
+        message: "Delivery location is required",
       });
     }
 
@@ -20,6 +32,7 @@ const createRequest = async (req, res) => {
         message: "Donation not found",
       });
     }
+
     // Prevent NGO from requesting its own donation
     if (donation.donor.toString() === req.user.id) {
       return res.status(403).json({
@@ -64,6 +77,11 @@ const createRequest = async (req, res) => {
       donation: donationId,
       ngo: req.user.id,
       message,
+      deliveryLocation: {
+        address: deliveryLocation.address.trim(),
+        latitude: Number(deliveryLocation.latitude),
+        longitude: Number(deliveryLocation.longitude),
+      },
     });
 
     // Reserve the donation while donor reviews the request
@@ -218,6 +236,18 @@ const updateRequestStatus = async (req, res) => {
       });
     }
 
+    // Make sure the request contains a valid delivery location
+    if (
+      !request.deliveryLocation ||
+      !request.deliveryLocation.address ||
+      request.deliveryLocation.latitude == null ||
+      request.deliveryLocation.longitude == null
+    ) {
+      return res.status(400).json({
+        message: "Delivery location is missing from this request",
+      });
+    }
+
     // Make sure a delivery doesn't already exist
     const existingDelivery = await Delivery.findOne({
       donation: request.donation._id,
@@ -240,10 +270,17 @@ const updateRequestStatus = async (req, res) => {
     request.donation.status = "accepted";
     await request.donation.save();
 
-    // Create delivery automatically
+    // Create delivery with the exact location
+    // selected by the NGO
     const delivery = await Delivery.create({
       donation: request.donation._id,
       ngo: request.ngo._id,
+      deliveryFee: 50,
+      deliveryLocation: {
+        address: request.deliveryLocation.address,
+        latitude: Number(request.deliveryLocation.latitude),
+        longitude: Number(request.deliveryLocation.longitude),
+      },
       otp,
     });
 
@@ -251,7 +288,6 @@ const updateRequestStatus = async (req, res) => {
       message: "Request accepted and delivery created successfully",
       request,
       delivery,
-      otp,
     });
   } catch (error) {
     console.error("Update donation request error:", error);

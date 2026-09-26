@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 /* ---------------------------------------------------------
-   Helper functions
+   Helpers
 --------------------------------------------------------- */
 
 const pad = (value) => String(value).padStart(2, "0");
@@ -83,9 +83,6 @@ const formatTime = (value) => {
 
 /* ---------------------------------------------------------
    Date + Time Field
-   12-hour format with AM / PM.
-   No calendar picker.
-   Manual typing + spinner controls.
 --------------------------------------------------------- */
 
 function DateTimeField({
@@ -110,17 +107,12 @@ function DateTimeField({
   };
 
   const [day, setDay] = useState(current ? current.getDate() : "");
-
   const [month, setMonth] = useState(current ? current.getMonth() + 1 : "");
-
   const [year, setYear] = useState(current ? current.getFullYear() : "");
-
   const [hour, setHour] = useState(
     current ? get12Hour(current.getHours()) : "",
   );
-
   const [minute, setMinute] = useState(current ? current.getMinutes() : "");
-
   const [meridiem, setMeridiem] = useState(
     current ? getMeridiem(current.getHours()) : "AM",
   );
@@ -348,7 +340,6 @@ function DateTimeField({
         <div className="mt-3 flex items-center gap-2">
           <Clock size={15} className="text-[#16796f]" />
 
-          {/* Hour */}
           <input
             type="number"
             min="1"
@@ -361,7 +352,6 @@ function DateTimeField({
 
           <span className="font-bold text-slate-400">:</span>
 
-          {/* Minute */}
           <input
             type="number"
             min="0"
@@ -372,7 +362,6 @@ function DateTimeField({
             className="w-20 rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
           />
 
-          {/* AM / PM */}
           <div className="ml-1 flex overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
             <button
               type="button"
@@ -400,7 +389,6 @@ function DateTimeField({
           </div>
         </div>
 
-        {/* Selected value */}
         {value && (
           <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
             <span className="text-xs text-slate-400">Selected</span>
@@ -457,6 +445,145 @@ function CreateDonation() {
   const now = getLocalDateTimeString();
 
   /* ---------------------------------------------------------
+     Manual address geocoding
+  --------------------------------------------------------- */
+
+  const geocodeAddress = async (addressToGeocode) => {
+    const trimmedAddress = addressToGeocode.trim();
+
+    if (!trimmedAddress) {
+      setLocationCoordinates({
+        latitude: null,
+        longitude: null,
+      });
+
+      return null;
+    }
+
+    try {
+      setLocationLoading(true);
+
+      /*
+        First try the complete address with India-specific
+        filtering.
+      */
+      const firstQuery = `${trimmedAddress}, India`;
+
+      const firstUrl =
+        `https://nominatim.openstreetmap.org/search` +
+        `?format=jsonv2` +
+        `&q=${encodeURIComponent(firstQuery)}` +
+        `&limit=1` +
+        `&countrycodes=in` +
+        `&addressdetails=1`;
+
+      let response = await fetch(firstUrl);
+
+      if (!response.ok) {
+        throw new Error("Address lookup failed.");
+      }
+
+      let data = await response.json();
+
+      /*
+        If the first search doesn't find anything, try the
+        original address without adding India.
+      */
+      if (!data.length) {
+        const fallbackUrl =
+          `https://nominatim.openstreetmap.org/search` +
+          `?format=jsonv2` +
+          `&q=${encodeURIComponent(trimmedAddress)}` +
+          `&limit=1` +
+          `&countrycodes=in` +
+          `&addressdetails=1`;
+
+        response = await fetch(fallbackUrl);
+
+        if (!response.ok) {
+          throw new Error("Address lookup failed.");
+        }
+
+        data = await response.json();
+      }
+
+      if (!data.length) {
+        setLocationCoordinates({
+          latitude: null,
+          longitude: null,
+        });
+
+        setFieldErrors((current) => ({
+          ...current,
+          address:
+            "We could not find this pickup location. Please enter a more specific address.",
+        }));
+
+        return null;
+      }
+
+      const latitude = Number(data[0].lat);
+      const longitude = Number(data[0].lon);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        setLocationCoordinates({
+          latitude: null,
+          longitude: null,
+        });
+
+        setFieldErrors((current) => ({
+          ...current,
+          address:
+            "The pickup location could not be mapped. Please enter a more specific address.",
+        }));
+
+        return null;
+      }
+
+      const coordinates = {
+        latitude,
+        longitude,
+      };
+
+      setLocationCoordinates(coordinates);
+
+      setFieldErrors((current) => ({
+        ...current,
+        address: "",
+      }));
+
+      setError("");
+
+      return coordinates;
+    } catch (geocodeError) {
+      console.error("GEOCODING FAILED:", geocodeError);
+
+      setLocationCoordinates({
+        latitude: null,
+        longitude: null,
+      });
+
+      setFieldErrors((current) => ({
+        ...current,
+        address:
+          "Could not find the pickup location. Please try again or enter a more specific address.",
+      }));
+
+      return null;
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const handleGeocodeAddress = async () => {
+    if (!address.trim()) {
+      return;
+    }
+
+    await geocodeAddress(address);
+  };
+
+  /* ---------------------------------------------------------
      Current location
   --------------------------------------------------------- */
 
@@ -475,10 +602,17 @@ function CreateDonation() {
       async (position) => {
         const { latitude, longitude } = position.coords;
 
-        setLocationCoordinates({
+        const coordinates = {
           latitude,
           longitude,
-        });
+        };
+
+        /*
+          Save coordinates immediately.
+          This means the donation still has valid coordinates
+          even if reverse geocoding has a temporary problem.
+        */
+        setLocationCoordinates(coordinates);
 
         try {
           const response = await fetch(
@@ -518,14 +652,18 @@ function CreateDonation() {
             }));
           } else {
             setError(
-              "Location detected, but the address could not be found. Please enter the pickup address manually.",
+              "Location detected, but the address could not be found. You can still enter the pickup address manually.",
             );
           }
         } catch (locationError) {
           console.error("REVERSE GEOCODING FAILED:", locationError);
 
+          /*
+            Do NOT erase the coordinates here.
+            Browser GPS already gave us valid coordinates.
+          */
           setError(
-            "Location detected, but the address could not be found. Please enter the pickup address manually.",
+            "Location detected, but the readable address could not be found. You can enter the pickup address manually.",
           );
         } finally {
           setLocationLoading(false);
@@ -583,6 +721,10 @@ function CreateDonation() {
       return;
     }
 
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
     setSelectedImage(file);
 
     const previewUrl = URL.createObjectURL(file);
@@ -633,6 +775,20 @@ function CreateDonation() {
       errors.address = "Pickup location is required.";
     }
 
+    /*
+      IMPORTANT:
+      A text address is not enough for the map.
+      We require actual coordinates.
+    */
+    const latitude = Number(locationCoordinates.latitude);
+
+    const longitude = Number(locationCoordinates.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      errors.address =
+        "Please select a valid pickup location so NGOs and volunteers can navigate to it.";
+    }
+
     if (preparedAt) {
       const preparedDate = parseDateTime(preparedAt);
 
@@ -677,6 +833,28 @@ function CreateDonation() {
     setError("");
     setSuccess("");
 
+    /*
+      If the user typed an address but hasn't blurred the
+      field yet, we still geocode it here.
+    */
+    if (
+      address.trim() &&
+      (locationCoordinates.latitude === null ||
+        locationCoordinates.longitude === null)
+    ) {
+      setLocationLoading(true);
+
+      const coordinates = await geocodeAddress(address);
+
+      if (!coordinates) {
+        setLocationLoading(false);
+        setError(
+          "Please enter a pickup address that can be located on the map before posting the donation.",
+        );
+        return;
+      }
+    }
+
     if (!validateForm()) {
       setError("Please correct the highlighted fields before posting.");
       return;
@@ -685,30 +863,63 @@ function CreateDonation() {
     setLoading(true);
 
     try {
+      /*
+        Final safety check immediately before sending.
+      */
+      const latitude = Number(locationCoordinates.latitude);
+
+      const longitude = Number(locationCoordinates.longitude);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        setFieldErrors((current) => ({
+          ...current,
+          address:
+            "Pickup coordinates are required. Please verify the pickup location.",
+        }));
+
+        setError("Please verify the pickup location before posting.");
+
+        return;
+      }
+
       const formData = new FormData();
 
       formData.append("foodName", foodName.trim());
+
       formData.append("category", category);
+
       formData.append("quantity", String(Number(quantity)));
+
       formData.append("unit", unit);
+
       formData.append("preparedAt", toApiDateTime(preparedAt));
+
       formData.append("pickupDeadline", toApiDateTime(pickupDeadline));
 
+      /*
+        This is the important part:
+        MongoDB will now receive real coordinates.
+      */
       formData.append(
         "location",
         JSON.stringify({
           address: address.trim(),
-          latitude: locationCoordinates.latitude,
-          longitude: locationCoordinates.longitude,
+          latitude,
+          longitude,
         }),
       );
 
       formData.append("description", description.trim());
 
-      // Send the actual image file
       if (selectedImage) {
         formData.append("image", selectedImage);
       }
+
+      console.log("LOCATION BEING SENT:", {
+        address: address.trim(),
+        latitude,
+        longitude,
+      });
 
       console.log("IMAGE BEING SENT:", selectedImage);
 
@@ -1018,6 +1229,10 @@ function CreateDonation() {
                   onChange={(e) => {
                     setAddress(e.target.value);
 
+                    /*
+                      The previous coordinates belong to the
+                      previous address, so invalidate them.
+                    */
                     setLocationCoordinates({
                       latitude: null,
                       longitude: null,
@@ -1027,7 +1242,10 @@ function CreateDonation() {
                       ...current,
                       address: "",
                     }));
+
+                    setError("");
                   }}
+                  onBlur={handleGeocodeAddress}
                   required
                   className="w-full bg-transparent outline-none placeholder:text-slate-400"
                 />
@@ -1036,7 +1254,7 @@ function CreateDonation() {
               <button
                 type="button"
                 onClick={handleUseCurrentLocation}
-                disabled={locationLoading}
+                disabled={locationLoading || loading}
                 className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#4f81b7]/30 bg-white/70 px-4 py-2.5 text-sm font-semibold text-[#0b306b] transition hover:border-[#16796f] hover:bg-[#eef7f6] hover:text-[#16796f] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Navigation
@@ -1045,7 +1263,7 @@ function CreateDonation() {
                 />
 
                 {locationLoading
-                  ? "Detecting location..."
+                  ? "Finding pickup location..."
                   : "Use Current Location"}
               </button>
 
@@ -1053,7 +1271,7 @@ function CreateDonation() {
                 locationCoordinates.longitude !== null && (
                   <div className="mt-2 flex items-center gap-2 text-xs font-medium text-[#16796f]">
                     <span className="h-2 w-2 rounded-full bg-[#16796f]" />
-                    Location coordinates detected
+                    Pickup location mapped successfully
                   </div>
                 )}
 
@@ -1162,12 +1380,16 @@ function CreateDonation() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || locationLoading}
               className="mt-7 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] py-4 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#16796f] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
               <Send size={18} />
 
-              {loading ? "Posting Donation..." : "Post Donation"}
+              {loading
+                ? "Posting Donation..."
+                : locationLoading
+                  ? "Finding Pickup Location..."
+                  : "Post Donation"}
             </button>
           </form>
 

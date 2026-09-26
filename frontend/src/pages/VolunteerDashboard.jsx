@@ -3,14 +3,13 @@ import {
   LayoutDashboard,
   Search,
   Truck,
-  Map,
   Settings,
   LogOut,
   Bike,
-  Clock,
   CheckCircle,
   ArrowRight,
   MapPin,
+  Navigation,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -47,7 +46,6 @@ function VolunteerDashboard() {
       ]);
 
       console.log("VOLUNTEER AVAILABLE DELIVERIES:", availableResponse.data);
-
       console.log("VOLUNTEER MY DELIVERIES:", myResponse.data);
 
       setAvailableDeliveries(
@@ -81,7 +79,8 @@ function VolunteerDashboard() {
 
       console.log("DELIVERY ACCEPTED:", response.data);
 
-      await fetchDashboardData();
+      // Move volunteer directly to the active delivery page.
+      navigate("/lets-deliver");
     } catch (error) {
       console.error("ACCEPT DELIVERY ERROR:", error);
 
@@ -93,16 +92,25 @@ function VolunteerDashboard() {
     }
   };
 
-  const activeDeliveries = myDeliveries.filter(
-    (delivery) =>
-      delivery.deliveryStatus === "pending" ||
-      delivery.deliveryStatus === "in_transit",
+  // Pending, in-transit, and delivered deliveries
+  // are still part of the active workflow until NGO verification.
+  const activeDeliveries = myDeliveries.filter((delivery) =>
+    ["pending", "in_transit", "delivered"].includes(delivery.deliveryStatus),
   );
 
+  // Only NGO-verified deliveries count as completed.
   const completedDeliveries = myDeliveries.filter(
-    (delivery) =>
-      delivery.deliveryStatus === "delivered" ||
-      delivery.deliveryStatus === "verified",
+    (delivery) => delivery.deliveryStatus === "verified",
+  );
+
+  // Earnings are added only after NGO verification.
+  const verifiedDeliveries = myDeliveries.filter(
+    (delivery) => delivery.deliveryStatus === "verified",
+  );
+
+  const totalEarnings = verifiedDeliveries.reduce(
+    (total, delivery) => total + Number(delivery.deliveryFee || 0),
+    0,
   );
 
   const formatCategory = (category) => {
@@ -126,21 +134,37 @@ function VolunteerDashboard() {
         </div>
 
         <nav className="mt-12 space-y-2">
-          <button className="flex w-full items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left font-medium">
+          <button
+            type="button"
+            onClick={() => navigate("/volunteer-dashboard")}
+            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left font-medium"
+          >
             <LayoutDashboard size={19} />
             Dashboard
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/available-pickups")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
             <Search size={19} />
-            Find Pickups
+            Available Pickups
           </button>
 
           <button
-            onClick={() => navigate("/delivery-tracking")}
+            type="button"
+            onClick={() => navigate("/lets-deliver")}
+            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
+          >
+            <Navigation size={19} />
+            Let's Deliver
+          </button>
+
+          {/* My Deliveries */}
+          <button
+            type="button"
+            onClick={() => navigate("/my-deliveries")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
             <Truck size={19} />
@@ -148,14 +172,7 @@ function VolunteerDashboard() {
           </button>
 
           <button
-            onClick={() => navigate("/available-pickups")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Map size={19} />
-            Map
-          </button>
-
-          <button
+            type="button"
             onClick={() => navigate("/settings")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
@@ -165,6 +182,7 @@ function VolunteerDashboard() {
         </nav>
 
         <button
+          type="button"
           onClick={handleLogout}
           className="mt-auto flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-blue-100 transition hover:bg-white/10"
         >
@@ -192,11 +210,12 @@ function VolunteerDashboard() {
           </div>
 
           <button
+            type="button"
             onClick={() => navigate("/available-pickups")}
             className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-[#16796f]"
           >
             <Search size={19} />
-            Find Pickup
+            Available Pickups
           </button>
         </div>
 
@@ -209,6 +228,7 @@ function VolunteerDashboard() {
 
         {/* Stats */}
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Available Pickups */}
           <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
             <p className="text-sm text-slate-500">Available Pickups</p>
 
@@ -217,6 +237,7 @@ function VolunteerDashboard() {
             </p>
           </div>
 
+          {/* Active Delivery */}
           <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
             <p className="text-sm text-slate-500">Active Delivery</p>
 
@@ -225,6 +246,7 @@ function VolunteerDashboard() {
             </p>
           </div>
 
+          {/* Meals Delivered */}
           <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
             <p className="text-sm text-slate-500">Meals Delivered</p>
 
@@ -233,12 +255,15 @@ function VolunteerDashboard() {
             </p>
           </div>
 
+          {/* Earnings */}
           <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
-            <p className="text-sm text-slate-500">Completed</p>
+            <p className="text-sm text-slate-500">Earnings</p>
 
             <p className="mt-2 text-3xl font-bold text-[#0b306b]">
-              {loading ? "—" : completedDeliveries.length}
+              {loading ? "—" : `₹${totalEarnings}`}
             </p>
+
+            <p className="mt-1 text-xs text-slate-400">Delivery fees earned</p>
           </div>
         </div>
 
@@ -258,6 +283,7 @@ function VolunteerDashboard() {
               </div>
 
               <button
+                type="button"
                 onClick={() => navigate("/available-pickups")}
                 className="flex cursor-pointer items-center gap-1 text-sm font-semibold text-[#16796f]"
               >
@@ -337,6 +363,7 @@ function VolunteerDashboard() {
                         </div>
 
                         <button
+                          type="button"
                           onClick={() => handleAcceptPickup(delivery._id)}
                           disabled={isAccepting}
                           className="cursor-pointer rounded-xl bg-[#16796f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0b306b] disabled:cursor-not-allowed disabled:opacity-50"
@@ -373,7 +400,8 @@ function VolunteerDashboard() {
             </div>
 
             <button
-              onClick={() => navigate("/delivery-tracking")}
+              type="button"
+              onClick={() => navigate("/my-deliveries")}
               className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#fdd8a5] px-5 py-3 font-semibold text-[#0b306b] transition hover:bg-white"
             >
               View My Deliveries

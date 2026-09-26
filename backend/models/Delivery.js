@@ -13,7 +13,26 @@ const deliverySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
+    deliveryFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    deliveryLocation: {
+      address: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      latitude: {
+        type: Number,
+        required: true,
+      },
+      longitude: {
+        type: Number,
+        required: true,
+      },
+    },
     volunteer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

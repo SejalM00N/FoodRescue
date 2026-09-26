@@ -61,7 +61,7 @@ router.put(
 router.put(
   "/:deliveryId/verify",
   protect,
-  authorizeRoles("ngo"),
+  authorizeRoles("volunteer"),
   verifyDelivery,
 );
 

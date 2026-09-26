@@ -50,6 +50,18 @@ const createDelivery = async (req, res) => {
       });
     }
 
+    // Delivery requires the NGO-selected delivery location
+    if (
+      !request.deliveryLocation ||
+      !request.deliveryLocation.address ||
+      request.deliveryLocation.latitude == null ||
+      request.deliveryLocation.longitude == null
+    ) {
+      return res.status(400).json({
+        message: "Delivery location is missing from the donation request",
+      });
+    }
+
     // Prevent duplicate deliveries
     const existingDelivery = await Delivery.findOne({
       donation: request.donation._id,
@@ -67,6 +79,7 @@ const createDelivery = async (req, res) => {
     const delivery = await Delivery.create({
       donation: request.donation._id,
       ngo: request.ngo._id,
+      deliveryLocation: request.deliveryLocation,
       otp,
     });
 
@@ -153,6 +166,35 @@ const acceptDelivery = async (req, res) => {
         message: "This donation is not ready for pickup",
       });
     }
+
+    // Repair older deliveries that were created before
+    // deliveryLocation was added to the Delivery model.
+    if (
+      !delivery.deliveryLocation ||
+      !delivery.deliveryLocation.address ||
+      delivery.deliveryLocation.latitude == null ||
+      delivery.deliveryLocation.longitude == null
+    ) {
+      const request = await DonationRequest.findOne({
+        donation: delivery.donation._id,
+        status: "accepted",
+      });
+
+      if (!request || !request.deliveryLocation) {
+        return res.status(400).json({
+          message: "Delivery location is missing",
+        });
+      }
+
+      delivery.deliveryLocation = {
+        address: request.deliveryLocation.address,
+        latitude: Number(request.deliveryLocation.latitude),
+        longitude: Number(request.deliveryLocation.longitude),
+      };
+    }
+
+    delivery.volunteer = req.user.id;
+    delivery.pickupStatus = "accepted";
 
     delivery.volunteer = req.user.id;
     delivery.pickupStatus = "accepted";
@@ -248,7 +290,7 @@ const getMyDeliveries = async (req, res) => {
       volunteer: req.user.id,
     })
       .populate("donation")
-      .populate("ngo", "name email")
+      .populate("ngo", "name email location latitude longitude")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -337,7 +379,7 @@ const markDelivered = async (req, res) => {
   }
 };
 
-// NGO verifies delivery using OTP
+// Volunteer verifies delivery using OTP provided by the NGO
 const verifyDelivery = async (req, res) => {
   try {
     const { deliveryId } = req.params;
@@ -357,16 +399,17 @@ const verifyDelivery = async (req, res) => {
       });
     }
 
-    // Only the assigned NGO can verify
-    if (delivery.ngo.toString() !== req.user.id) {
+    // Only the assigned volunteer can enter the NGO's OTP
+    if (delivery.volunteer?.toString() !== req.user.id) {
       return res.status(403).json({
-        message: "You can only verify deliveries assigned to your NGO",
+        message: "You are not assigned to this delivery",
       });
     }
 
+    // Volunteer can verify only after reaching the NGO
     if (delivery.deliveryStatus !== "delivered") {
       return res.status(400).json({
-        message: "Delivery must be marked as delivered first",
+        message: "Delivery must be marked as reached first",
       });
     }
 
@@ -376,12 +419,14 @@ const verifyDelivery = async (req, res) => {
       });
     }
 
+    // Compare the OTP provided by the volunteer
     if (delivery.otp !== String(otp)) {
       return res.status(400).json({
         message: "Invalid OTP",
       });
     }
 
+    // Complete the delivery
     delivery.otpVerified = true;
     delivery.deliveryStatus = "verified";
 

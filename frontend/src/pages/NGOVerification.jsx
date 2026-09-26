@@ -16,11 +16,8 @@ function NGOVerification() {
   const deliveryId = searchParams.get("deliveryId");
 
   const [delivery, setDelivery] = useState(null);
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(true);
-  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     fetchDelivery();
@@ -56,46 +53,6 @@ function NGOVerification() {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVerify = async () => {
-    if (!otp.trim()) {
-      setError("Please enter the 6-digit OTP.");
-      return;
-    }
-
-    if (!/^\d{6}$/.test(otp)) {
-      setError("OTP must contain exactly 6 digits.");
-      return;
-    }
-
-    try {
-      setVerifying(true);
-      setError("");
-      setSuccess("");
-
-      const response = await api.put(`/deliveries/${deliveryId}/verify`, {
-        otp: otp.trim(),
-      });
-
-      console.log("DELIVERY VERIFIED:", response.data);
-
-      setSuccess("Delivery verified successfully.");
-      setDelivery((currentDelivery) => ({
-        ...currentDelivery,
-        deliveryStatus: "verified",
-        otpVerified: true,
-      }));
-      setOtp("");
-    } catch (error) {
-      console.error("VERIFY DELIVERY ERROR:", error);
-
-      setError(
-        error.response?.data?.message || "Could not verify this delivery.",
-      );
-    } finally {
-      setVerifying(false);
     }
   };
 
@@ -137,8 +94,8 @@ function NGOVerification() {
             </h1>
 
             <p className="mt-3 leading-6 text-slate-500">
-              Enter the OTP provided by the volunteer to confirm that the food
-              has been successfully delivered.
+              The volunteer has reached your NGO. Share the verification code
+              below with the volunteer to complete the delivery.
             </p>
           </div>
 
@@ -151,12 +108,6 @@ function NGOVerification() {
           {error && (
             <div className="mx-auto mt-8 max-w-xl rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">
               {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mx-auto mt-8 max-w-xl rounded-2xl bg-green-50 px-5 py-4 text-sm text-green-700">
-              {success}
             </div>
           )}
 
@@ -175,7 +126,7 @@ function NGOVerification() {
 
                     <p className="mt-1 text-sm text-slate-500">
                       {delivery.donation?.quantity || ""}{" "}
-                      {delivery.donation?.unit || ""} • Delivered
+                      {delivery.donation?.unit || ""} • Delivery
                     </p>
                   </div>
                 </div>
@@ -203,55 +154,7 @@ function NGOVerification() {
                 </div>
               </div>
 
-              {!delivery.otpVerified ? (
-                <>
-                  <div className="mx-auto mt-8 max-w-xl">
-                    <label className="text-sm font-semibold text-[#0b306b]">
-                      Enter 6-digit OTP
-                    </label>
-
-                    <div className="relative mt-3">
-                      <LockKeyhole
-                        size={19}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                      />
-
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={otp}
-                        onChange={(event) => {
-                          const value = event.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 6);
-
-                          setOtp(value);
-                          setError("");
-                        }}
-                        placeholder="Enter OTP"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-12 py-4 text-center text-xl font-bold tracking-[0.5em] text-[#0b306b] outline-none transition focus:border-[#16796f] focus:ring-4 focus:ring-[#16796f]/10"
-                      />
-                    </div>
-
-                    <p className="mt-3 text-center text-xs text-slate-400">
-                      Ask the volunteer for the OTP generated for this delivery.
-                    </p>
-                  </div>
-
-                  <div className="mx-auto mt-7 max-w-xl">
-                    <button
-                      onClick={handleVerify}
-                      disabled={verifying || otp.length !== 6}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-4 font-semibold text-white shadow-lg transition hover:bg-[#16796f] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <CheckCircle size={19} />
-
-                      {verifying ? "Verifying..." : "Verify Delivery"}
-                    </button>
-                  </div>
-                </>
-              ) : (
+              {delivery.otpVerified ? (
                 <div className="mx-auto mt-8 max-w-xl rounded-3xl bg-green-50 p-6 text-center">
                   <CheckCircle size={42} className="mx-auto text-green-600" />
 
@@ -264,19 +167,53 @@ function NGOVerification() {
                     completed.
                   </p>
                 </div>
+              ) : delivery.deliveryStatus === "delivered" ? (
+                <>
+                  <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-[#fdd8a5] bg-[#fff8ed] p-7 text-center shadow-sm">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
+                      <LockKeyhole size={22} />
+                    </div>
+
+                    <p className="mt-4 text-sm font-semibold uppercase tracking-wider text-[#16796f]">
+                      Delivery Verification OTP
+                    </p>
+
+                    <p className="mt-3 text-4xl font-black tracking-[0.25em] text-[#0b306b]">
+                      {delivery.otp}
+                    </p>
+
+                    <p className="mt-4 text-sm leading-5 text-slate-500">
+                      Give this 6-digit code to the volunteer. The volunteer
+                      will enter it on their device to complete the delivery.
+                    </p>
+                  </div>
+
+                  <div className="mx-auto mt-7 flex max-w-xl gap-3 rounded-2xl bg-[#dcecf8]/70 p-4">
+                    <ShieldCheck
+                      size={20}
+                      className="mt-0.5 shrink-0 text-[#16796f]"
+                    />
+
+                    <p className="text-sm leading-5 text-slate-600">
+                      Do not share this code with anyone other than the
+                      volunteer handling this delivery.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="mx-auto mt-8 max-w-xl rounded-3xl bg-[#dcecf8]/70 p-6 text-center">
+                  <ShieldCheck size={38} className="mx-auto text-[#16796f]" />
+
+                  <h2 className="mt-4 text-xl font-bold text-[#0b306b]">
+                    Waiting for Volunteer
+                  </h2>
+
+                  <p className="mt-2 text-sm leading-5 text-slate-500">
+                    The OTP will appear here after the volunteer marks the
+                    delivery as reached.
+                  </p>
+                </div>
               )}
-
-              <div className="mx-auto mt-7 flex max-w-xl gap-3 rounded-2xl bg-[#dcecf8]/70 p-4">
-                <ShieldCheck
-                  size={20}
-                  className="mt-0.5 shrink-0 text-[#16796f]"
-                />
-
-                <p className="text-sm leading-5 text-slate-600">
-                  This verification confirms that the donated food reached the
-                  intended NGO and completes the delivery.
-                </p>
-              </div>
             </>
           )}
         </div>

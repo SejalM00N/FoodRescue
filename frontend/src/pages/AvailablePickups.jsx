@@ -15,9 +15,52 @@ function AvailablePickups() {
   const navigate = useNavigate();
 
   const [deliveries, setDeliveries] = useState([]);
+  const [volunteerLocation, setVolunteerLocation] = useState(null);
+
   const [loading, setLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(true);
   const [error, setError] = useState("");
   const [acceptingId, setAcceptingId] = useState("");
+
+  // --------------------------------------------------
+  // GET VOLUNTEER LOCATION
+  // --------------------------------------------------
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationLoading(false);
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        setVolunteerLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+
+        setLocationLoading(false);
+      },
+      (locationError) => {
+        console.error("VOLUNTEER LOCATION ERROR:", locationError);
+
+        setLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 10000,
+      },
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+
+  // --------------------------------------------------
+  // FETCH AVAILABLE PICKUPS
+  // --------------------------------------------------
 
   useEffect(() => {
     fetchAvailablePickups();
@@ -32,7 +75,11 @@ function AvailablePickups() {
 
       console.log("AVAILABLE DELIVERIES:", response.data);
 
-      setDeliveries(response.data.deliveries || []);
+      setDeliveries(
+        Array.isArray(response.data?.deliveries)
+          ? response.data.deliveries
+          : [],
+      );
     } catch (error) {
       console.error("AVAILABLE DELIVERIES ERROR:", error);
 
@@ -44,6 +91,76 @@ function AvailablePickups() {
     }
   };
 
+  // --------------------------------------------------
+  // DISTANCE CALCULATION
+  // --------------------------------------------------
+
+  const calculateDistance = (latitude1, longitude1, latitude2, longitude2) => {
+    const earthRadiusKm = 6371;
+
+    const lat1 = (latitude1 * Math.PI) / 180;
+    const lat2 = (latitude2 * Math.PI) / 180;
+
+    const deltaLatitude = ((latitude2 - latitude1) * Math.PI) / 180;
+
+    const deltaLongitude = ((longitude2 - longitude1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(deltaLatitude / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLongitude / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return earthRadiusKm * c;
+  };
+
+  const getPickupDistance = (delivery) => {
+    const pickupLocation = delivery?.donation?.location;
+
+    if (
+      !volunteerLocation ||
+      pickupLocation?.latitude == null ||
+      pickupLocation?.longitude == null
+    ) {
+      return null;
+    }
+
+    return calculateDistance(
+      volunteerLocation.latitude,
+      volunteerLocation.longitude,
+      Number(pickupLocation.latitude),
+      Number(pickupLocation.longitude),
+    );
+  };
+
+  // --------------------------------------------------
+  // SORT PICKUPS BY PROXIMITY
+  // --------------------------------------------------
+
+  const sortedDeliveries = [...deliveries].sort((deliveryA, deliveryB) => {
+    const distanceA = getPickupDistance(deliveryA);
+    const distanceB = getPickupDistance(deliveryB);
+
+    // If location isn't available, keep those pickups at the bottom.
+    if (distanceA == null && distanceB == null) {
+      return 0;
+    }
+
+    if (distanceA == null) {
+      return 1;
+    }
+
+    if (distanceB == null) {
+      return -1;
+    }
+
+    return distanceA - distanceB;
+  });
+
+  // --------------------------------------------------
+  // ACCEPT PICKUP
+  // --------------------------------------------------
+
   const handleAcceptPickup = async (deliveryId) => {
     try {
       setAcceptingId(deliveryId);
@@ -53,9 +170,13 @@ function AvailablePickups() {
 
       console.log("DELIVERY ACCEPTED:", response.data);
 
+      // Remove accepted delivery from available list
       setDeliveries((currentDeliveries) =>
         currentDeliveries.filter((delivery) => delivery._id !== deliveryId),
       );
+
+      // Move volunteer directly to active delivery page
+      navigate("/lets-deliver");
     } catch (error) {
       console.error("ACCEPT PICKUP ERROR:", error);
 
@@ -66,6 +187,10 @@ function AvailablePickups() {
       setAcceptingId("");
     }
   };
+
+  // --------------------------------------------------
+  // FORMAT DEADLINE
+  // --------------------------------------------------
 
   const formatDeadline = (deadline) => {
     if (!deadline) return "No deadline";
@@ -78,10 +203,31 @@ function AvailablePickups() {
     });
   };
 
+  // --------------------------------------------------
+  // FORMAT DISTANCE
+  // --------------------------------------------------
+
+  const formatDistance = (distance) => {
+    if (distance == null) {
+      return "Distance unavailable";
+    }
+
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)} m away`;
+    }
+
+    return `${distance.toFixed(1)} km away`;
+  };
+
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
+
   return (
     <div className="min-h-screen bg-[#fdf6ec] px-6 py-8">
       {/* Back */}
       <button
+        type="button"
         onClick={() => navigate("/volunteer-dashboard")}
         className="mb-6 flex items-center gap-2 text-sm font-medium text-[#0b306b] transition hover:text-[#16796f]"
       >
@@ -101,7 +247,7 @@ function AvailablePickups() {
           </h1>
 
           <p className="mt-2 text-slate-500">
-            Choose a food pickup that you can deliver to an NGO.
+            Choose a nearby food pickup and help deliver it to an NGO.
           </p>
         </div>
 
@@ -113,11 +259,17 @@ function AvailablePickups() {
 
           <div>
             <p className="font-semibold text-[#0b306b]">
-              Available food pickups
+              {locationLoading
+                ? "Finding your location..."
+                : volunteerLocation
+                  ? "Pickups near you"
+                  : "Location unavailable"}
             </p>
 
             <p className="mt-1 text-sm text-slate-500">
-              Pickups shown here are currently waiting for a volunteer.
+              {volunteerLocation
+                ? "Pickups are prioritized by distance from your current location."
+                : "Allow location access to sort pickups by proximity."}
             </p>
           </div>
         </div>
@@ -152,13 +304,15 @@ function AvailablePickups() {
         )}
 
         {/* Pickup cards */}
-        {!loading && deliveries.length > 0 && (
+        {!loading && sortedDeliveries.length > 0 && (
           <div className="mt-8 space-y-5">
-            {deliveries.map((delivery) => {
+            {sortedDeliveries.map((delivery) => {
               const donation = delivery.donation;
               const ngo = delivery.ngo;
 
               const isAccepting = acceptingId === delivery._id;
+
+              const pickupDistance = getPickupDistance(delivery);
 
               return (
                 <div
@@ -184,6 +338,13 @@ function AvailablePickups() {
                         <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-[#16796f]">
                           <Bike size={16} />
                           Volunteer Pickup
+                        </div>
+
+                        {/* Distance */}
+                        <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-[#0b306b]">
+                          <MapPin size={15} />
+
+                          {formatDistance(pickupDistance)}
                         </div>
                       </div>
                     </div>
@@ -244,6 +405,7 @@ function AvailablePickups() {
                       </div>
 
                       <button
+                        type="button"
                         onClick={() => handleAcceptPickup(delivery._id)}
                         disabled={isAccepting}
                         className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-md transition hover:bg-[#16796f] disabled:cursor-not-allowed disabled:opacity-50"

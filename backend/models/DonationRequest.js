@@ -24,6 +24,21 @@ const donationRequestSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    deliveryLocation: {
+      address: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      latitude: {
+        type: Number,
+        required: true,
+      },
+      longitude: {
+        type: Number,
+        required: true,
+      },
+    },
   },
   {
     timestamps: true,

@@ -1,3 +1,4 @@
+import "leaflet/dist/leaflet.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -15,8 +16,11 @@ import NGODashboard from "./pages/NGODashboard.jsx";
 import FindFood from "./pages/FindFood.jsx";
 import NGORequests from "./pages/NGORequests.jsx";
 import VolunteerDashboard from "./pages/VolunteerDashboard.jsx";
+import VolunteerMap from "./pages/VolunteerMap.jsx";
 import AvailablePickups from "./pages/AvailablePickups.jsx";
+import LetsDeliver from "./pages/LetsDeliver.jsx";
 import DeliveryTracking from "./pages/DeliveryTracking.jsx";
+import MyDeliveries from "./pages/MyDeliveries.jsx";
 import NGOVerification from "./pages/NGOVerification.jsx";
 import Success from "./pages/Success.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -46,9 +50,13 @@ createRoot(document.getElementById("root")).render(
           <Route path="/ngo-requests" element={<NGORequests />} />
 
           <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
+          <Route path="/volunteer-map" element={<VolunteerMap />} />
           <Route path="/available-pickups" element={<AvailablePickups />} />
+          <Route path="/lets-deliver" element={<LetsDeliver />} />
           <Route path="/delivery-tracking" element={<DeliveryTracking />} />
+          <Route path="/my-deliveries" element={<MyDeliveries />} />
           <Route path="/ngo-verification" element={<NGOVerification />} />
+
           <Route path="/success" element={<Success />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
