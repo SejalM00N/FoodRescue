@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 import {
   ArrowLeft,
   CheckCircle,
@@ -108,21 +109,88 @@ function LetsDeliver() {
   // LIVE VOLUNTEER LOCATION
   // --------------------------------------------------
 
+  // --------------------------------------------------
+  // LIVE VOLUNTEER LOCATION + SOCKET.IO
+  // --------------------------------------------------
+
   useEffect(() => {
+    // Do not share location if there is no active delivery
+    if (!activeDelivery) {
+      setVolunteerLocation(null);
+      setLocationLoading(false);
+      return;
+    }
+
+    // Stop location sharing after delivery is verified
+    if (activeDelivery.deliveryStatus === "verified") {
+      setVolunteerLocation(null);
+      setLocationLoading(false);
+      return;
+    }
+
     if (!navigator.geolocation) {
       setLocationLoading(false);
       setError("Location services are not supported by this browser.");
       return;
     }
 
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+
+      const token = localStorage.getItem("foodrescue_token");
+
+      console.log("SOCKET TOKEN EXISTS:", !!token);
+
+      socket.emit("authenticate", token);
+    });
+
+    socket.on("socket-authenticated", () => {
+      console.log("Socket authenticated successfully.");
+
+      socket.emit("join-delivery", activeDelivery._id);
+    });
+
+    socket.on("socket-auth-error", (socketError) => {
+      console.error("SOCKET AUTH ERROR:", socketError);
+    });
+
+    socket.on("delivery-access-granted", ({ deliveryId }) => {
+      console.log("Joined delivery tracking room:", deliveryId);
+    });
+
+    socket.on("delivery-access-denied", (accessError) => {
+      console.error("DELIVERY SOCKET ACCESS DENIED:", accessError);
+    });
+
+    socket.on("connect_error", (socketError) => {
+      console.error("SOCKET CONNECTION ERROR:", socketError);
+    });
+
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        setVolunteerLocation({
+        const location = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
+        };
+        console.log("VOLUNTEER LIVE LOCATION:", location);
+
+        setVolunteerLocation(location);
+        setLocationLoading(false);
+
+        // Send live location to other participants
+        console.log("SENDING LOCATION TO SOCKET:", {
+          deliveryId: activeDelivery._id,
+          latitude: location.latitude,
+          longitude: location.longitude,
         });
 
-        setLocationLoading(false);
+        socket.emit("volunteer-location", {
+          deliveryId: activeDelivery._id,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        });
       },
       (locationError) => {
         console.error("VOLUNTEER LOCATION ERROR:", locationError);
@@ -140,8 +208,11 @@ function LetsDeliver() {
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
+      socket.disconnect();
+
+      console.log("Live location sharing stopped.");
     };
-  }, []);
+  }, [activeDelivery]);
 
   // --------------------------------------------------
   // CURRENT DELIVERY DATA

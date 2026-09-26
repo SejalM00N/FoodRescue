@@ -26,6 +26,7 @@ import Success from "./pages/Success.jsx";
 import Settings from "./pages/Settings.jsx";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./context/ProtectedRoute.jsx";
 
 import "./index.css";
 
@@ -34,31 +35,161 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<App />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/role-selection" element={<RoleSelection />} />
 
-          <Route path="/donor-dashboard" element={<DonorDashboard />} />
-          <Route path="/create-donation" element={<CreateDonation />} />
-          <Route path="/my-donations" element={<MyDonations />} />
-          <Route path="/donation-requests" element={<DonationRequests />} />
+          {/* Donor routes */}
+          <Route
+            path="/donor-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonorDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/ngo-dashboard" element={<NGODashboard />} />
-          <Route path="/find-food" element={<FindFood />} />
-          <Route path="/ngo-requests" element={<NGORequests />} />
+          <Route
+            path="/create-donation"
+            element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <CreateDonation />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
-          <Route path="/volunteer-map" element={<VolunteerMap />} />
-          <Route path="/available-pickups" element={<AvailablePickups />} />
-          <Route path="/lets-deliver" element={<LetsDeliver />} />
-          <Route path="/delivery-tracking" element={<DeliveryTracking />} />
-          <Route path="/my-deliveries" element={<MyDeliveries />} />
-          <Route path="/ngo-verification" element={<NGOVerification />} />
+          <Route
+            path="/my-donations"
+            element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <MyDonations />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/success" element={<Success />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route
+            path="/donation-requests"
+            element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <DonationRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* NGO routes */}
+          <Route
+            path="/ngo-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGODashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/find-food"
+            element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <FindFood />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ngo-requests"
+            element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGORequests />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Volunteer routes */}
+          <Route
+            path="/volunteer-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/volunteer-map"
+            element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <VolunteerMap />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/available-pickups"
+            element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <AvailablePickups />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/lets-deliver"
+            element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <LetsDeliver />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/delivery-tracking"
+            element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <DeliveryTracking />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-deliveries"
+            element={
+              <ProtectedRoute allowedRoles={["volunteer"]}>
+                <MyDeliveries />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* NGO verification */}
+          <Route
+            path="/ngo-verification"
+            element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOVerification />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Other protected routes */}
+          <Route
+            path="/success"
+            element={
+              <ProtectedRoute>
+                <Success />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

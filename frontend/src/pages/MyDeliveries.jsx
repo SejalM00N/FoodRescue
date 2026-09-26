@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  ArrowLeft,
   CheckCircle2,
   MapPin,
   PackageCheck,
@@ -7,9 +8,12 @@ import {
   CalendarDays,
   Loader2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 const MyDeliveries = () => {
+  const navigate = useNavigate();
+
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -54,6 +58,15 @@ const MyDeliveries = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#fff8ef] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/volunteer-dashboard")}
+          className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/70 px-4 py-2.5 text-sm font-semibold text-[#0b306b] shadow-sm backdrop-blur-xl transition hover:bg-white hover:shadow-md"
+        >
+          <ArrowLeft size={18} />
+          Back to Dashboard
+        </button>
+
         {/* Header */}
         <div className="mb-8">
           <div className="mb-2 flex items-center gap-3">

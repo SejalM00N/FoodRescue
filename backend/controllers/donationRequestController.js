@@ -137,11 +137,25 @@ const getDonationRequests = async (req, res) => {
       donation: { $in: donationIds },
     })
       .populate("donation")
-      .populate("ngo", "name email")
+      .populate("ngo", "name email phone")
       .sort({ createdAt: -1 });
 
+    const requestsWithDelivery = await Promise.all(
+      requests.map(async (request) => {
+        const delivery = await Delivery.findOne({
+          donation: request.donation?._id,
+          ngo: request.ngo?._id,
+        }).populate("volunteer", "name email phone");
+
+        return {
+          ...request.toObject(),
+          delivery,
+        };
+      }),
+    );
+
     res.json({
-      requests,
+      requests: requestsWithDelivery,
     });
   } catch (error) {
     console.error("Get donor donation requests error:", error);

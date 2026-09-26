@@ -290,7 +290,14 @@ const getMyDeliveries = async (req, res) => {
       volunteer: req.user.id,
     })
       .populate("donation")
-      .populate("ngo", "name email location latitude longitude")
+      .populate("ngo", "name email phone location latitude longitude")
+      .populate({
+        path: "donation",
+        populate: {
+          path: "donor",
+          select: "name email phone",
+        },
+      })
       .sort({ createdAt: -1 });
 
     res.json({
@@ -313,7 +320,7 @@ const getMyNGODeliveries = async (req, res) => {
       ngo: req.user.id,
     })
       .populate("donation")
-      .populate("volunteer", "name email")
+      .populate("volunteer", "name email phone")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -445,6 +452,18 @@ const verifyDelivery = async (req, res) => {
     }
 
     donation.status = "completed";
+
+    // Update the original NGO request to delivered
+    const donationRequest = await DonationRequest.findOne({
+      donation: delivery.donation,
+      ngo: delivery.ngo,
+      status: "accepted",
+    });
+
+    if (donationRequest) {
+      donationRequest.status = "delivered";
+      await donationRequest.save();
+    }
 
     await donation.save();
     await delivery.save();
