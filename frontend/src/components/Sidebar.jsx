@@ -149,11 +149,11 @@ function Sidebar({ role, isOpen, onClose }) {
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#0b306b] p-6 text-white
-          shadow-2xl transition-transform duration-300 ease-in-out
-          md:static md:z-auto md:w-64 md:translate-x-0 md:shadow-none
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
+  fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#0b306b] p-6 text-white
+  shadow-2xl transition-transform duration-300 ease-in-out
+  md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:shadow-none
+  ${isOpen ? "translate-x-0" : "-translate-x-full"}
+`}
       >
         {/* Logo / Mobile close */}
         <div className="flex items-center justify-between">
