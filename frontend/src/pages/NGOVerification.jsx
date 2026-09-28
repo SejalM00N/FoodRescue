@@ -98,7 +98,7 @@ function NGOVerification() {
       return;
     }
 
-    const socket = io("http://localhost:5000");
+    const socket = io(import.meta.env.VITE_SOCKET_URL);
 
     socket.on("connect", () => {
       console.log("NGO SOCKET CONNECTED:", socket.id);
