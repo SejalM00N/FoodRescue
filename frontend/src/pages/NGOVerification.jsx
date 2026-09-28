@@ -164,7 +164,7 @@ function NGOVerification() {
           {/* Back button */}
           <button
             type="button"
-            onClick={() => navigate("/delivery-tracking")}
+            onClick={() => navigate("/ngo-deliveries")}
             className="mb-5 flex cursor-pointer items-center gap-2 rounded-xl px-1 py-2 text-sm font-medium text-[#0b306b] transition hover:text-[#16796f] sm:mb-8"
           >
             <ArrowLeft size={18} />

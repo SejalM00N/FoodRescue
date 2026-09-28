@@ -67,7 +67,7 @@ function Sidebar({ role, isOpen, onClose }) {
       {
         label: "Deliveries",
         icon: Truck,
-        path: "/ngo-verification",
+        path: "/ngo-deliveries",
       },
       {
         label: "Settings",

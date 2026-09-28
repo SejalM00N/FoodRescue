@@ -8,20 +8,25 @@ import Login from "./pages/Login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Register from "./pages/Register.jsx";
 import RoleSelection from "./pages/RoleSelection.jsx";
+
 import DonorDashboard from "./pages/DonorDashboard.jsx";
 import CreateDonation from "./pages/CreateDonation.jsx";
 import MyDonations from "./pages/MyDonations.jsx";
 import DonationRequests from "./pages/DonationRequests.jsx";
+
 import NGODashboard from "./pages/NGODashboard.jsx";
 import FindFood from "./pages/FindFood.jsx";
 import NGORequests from "./pages/NGORequests.jsx";
+import NGODeliveries from "./pages/NGODeliveries.jsx";
+import NGOVerification from "./pages/NGOVerification.jsx";
+
 import VolunteerDashboard from "./pages/VolunteerDashboard.jsx";
 import VolunteerMap from "./pages/VolunteerMap.jsx";
 import AvailablePickups from "./pages/AvailablePickups.jsx";
 import LetsDeliver from "./pages/LetsDeliver.jsx";
 import DeliveryTracking from "./pages/DeliveryTracking.jsx";
 import MyDeliveries from "./pages/MyDeliveries.jsx";
-import NGOVerification from "./pages/NGOVerification.jsx";
+
 import Success from "./pages/Success.jsx";
 import Settings from "./pages/Settings.jsx";
 
@@ -107,6 +112,25 @@ createRoot(document.getElementById("root")).render(
             }
           />
 
+          <Route
+            path="/ngo-deliveries"
+            element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGODeliveries />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* NGO verification - specific delivery */}
+          <Route
+            path="/ngo-verification"
+            element={
+              <ProtectedRoute allowedRoles={["ngo"]}>
+                <NGOVerification />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Volunteer routes */}
           <Route
             path="/volunteer-dashboard"
@@ -158,16 +182,6 @@ createRoot(document.getElementById("root")).render(
             element={
               <ProtectedRoute allowedRoles={["volunteer"]}>
                 <MyDeliveries />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* NGO verification */}
-          <Route
-            path="/ngo-verification"
-            element={
-              <ProtectedRoute allowedRoles={["ngo"]}>
-                <NGOVerification />
               </ProtectedRoute>
             }
           />
