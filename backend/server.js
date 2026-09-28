@@ -138,6 +138,18 @@ io.on("connection", (socket) => {
         return;
       }
 
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number" ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
+      ) {
+        console.warn("Invalid volunteer coordinates received.");
+        return;
+      }
+
       if (socket.data.deliveryId !== deliveryId) {
         return;
       }

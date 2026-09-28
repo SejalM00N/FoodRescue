@@ -37,20 +37,26 @@ function RoleSelection() {
   ];
 
   const handleRoleSelect = async (role) => {
+    if (loadingRole) return;
+
     setError("");
     setLoadingRole(role);
 
     try {
       const user = await updateRole(role);
 
-      if (user.role === "donor") {
-        navigate("/donor-dashboard");
-      } else if (user.role === "ngo") {
-        navigate("/ngo-dashboard");
-      } else if (user.role === "volunteer") {
-        navigate("/volunteer-dashboard");
+      if (user?.role === "donor") {
+        navigate("/donor-dashboard", { replace: true });
+      } else if (user?.role === "ngo") {
+        navigate("/ngo-dashboard", { replace: true });
+      } else if (user?.role === "volunteer") {
+        navigate("/volunteer-dashboard", { replace: true });
+      } else {
+        setError("Role was updated, but the dashboard could not be opened.");
       }
     } catch (error) {
+      console.error("ROLE SELECTION ERROR:", error);
+
       setError(
         error.response?.data?.message ||
           "Could not save your role. Please try again.",
@@ -81,12 +87,15 @@ function RoleSelection() {
 
         {/* Error */}
         {error && (
-          <div className="mx-auto mt-6 max-w-xl rounded-2xl bg-red-50 px-5 py-4 text-center text-sm text-red-600">
+          <div
+            role="alert"
+            className="mx-auto mt-6 max-w-xl rounded-2xl bg-red-50 px-5 py-4 text-center text-sm text-red-600"
+          >
             {error}
           </div>
         )}
 
-        {/* Role cards */}
+        {/* Role Cards */}
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {roles.map((item) => {
             const Icon = item.icon;
@@ -95,8 +104,10 @@ function RoleSelection() {
             return (
               <button
                 key={item.role}
+                type="button"
                 onClick={() => handleRoleSelect(item.role)}
                 disabled={loadingRole !== ""}
+                aria-busy={isLoading}
                 className="group cursor-pointer rounded-[2rem] border border-white/70 bg-white/70 p-7 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <div
@@ -115,6 +126,7 @@ function RoleSelection() {
 
                 <div className="mt-7 flex items-center gap-2 font-semibold text-[#16796f]">
                   {isLoading ? "Saving..." : "Continue"}
+
                   {!isLoading && (
                     <ArrowRight
                       size={18}

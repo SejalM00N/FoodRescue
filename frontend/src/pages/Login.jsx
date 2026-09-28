@@ -44,7 +44,7 @@ function Login() {
     <div className="min-h-screen bg-[#fdf6ec] px-6 py-8">
       {/* Back button */}
       <button
-        onClick={() => window.history.back()}
+        onClick={() => navigate("/")}
         className="mb-6 flex items-center gap-2 text-sm font-medium text-[#0b306b] transition hover:text-[#16796f]"
       >
         <ArrowLeft size={18} />
@@ -123,19 +123,9 @@ function Login() {
 
               {/* Password */}
               <div className="mt-5">
-                <div className="mb-2 flex items-center justify-between">
-                  <label className="block text-sm font-semibold text-[#0b306b]">
-                    Password
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => navigate("/forgot-password")}
-                    className="text-xs font-semibold text-[#16796f] hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                  Password
+                </label>
 
                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 shadow-sm">
                   <Lock size={19} className="text-[#4f81b7]" />

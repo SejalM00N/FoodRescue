@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     phone: {
       type: String,
       trim: true,
@@ -40,16 +41,21 @@ const userSchema = new mongoose.Schema(
 
     latitude: {
       type: Number,
+      min: -90,
+      max: 90,
       default: null,
     },
 
     longitude: {
       type: Number,
+      min: -180,
+      max: 180,
       default: null,
     },
 
     locationAccuracy: {
       type: Number,
+      min: 0,
       default: null,
     },
   },

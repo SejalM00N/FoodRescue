@@ -107,12 +107,17 @@ function DateTimeField({
   };
 
   const [day, setDay] = useState(current ? current.getDate() : "");
+
   const [month, setMonth] = useState(current ? current.getMonth() + 1 : "");
+
   const [year, setYear] = useState(current ? current.getFullYear() : "");
+
   const [hour, setHour] = useState(
     current ? get12Hour(current.getHours()) : "",
   );
+
   const [minute, setMinute] = useState(current ? current.getMinutes() : "");
+
   const [meridiem, setMeridiem] = useState(
     current ? getMeridiem(current.getHours()) : "AM",
   );
@@ -408,7 +413,7 @@ function DateTimeField({
 }
 
 /* ---------------------------------------------------------
-   Main component
+   Main Component
 --------------------------------------------------------- */
 
 function CreateDonation() {
@@ -445,7 +450,7 @@ function CreateDonation() {
   const now = getLocalDateTimeString();
 
   /* ---------------------------------------------------------
-     Manual address geocoding
+     Manual Address Geocoding
   --------------------------------------------------------- */
 
   const geocodeAddress = async (addressToGeocode) => {
@@ -463,10 +468,6 @@ function CreateDonation() {
     try {
       setLocationLoading(true);
 
-      /*
-        First try the complete address with India-specific
-        filtering.
-      */
       const firstQuery = `${trimmedAddress}, India`;
 
       const firstUrl =
@@ -486,8 +487,8 @@ function CreateDonation() {
       let data = await response.json();
 
       /*
-        If the first search doesn't find anything, try the
-        original address without adding India.
+        If the first search doesn't find anything,
+        try the original address without adding India.
       */
       if (!data.length) {
         const fallbackUrl =
@@ -584,7 +585,7 @@ function CreateDonation() {
   };
 
   /* ---------------------------------------------------------
-     Current location
+     Current Location
   --------------------------------------------------------- */
 
   const handleUseCurrentLocation = () => {
@@ -699,7 +700,7 @@ function CreateDonation() {
   };
 
   /* ---------------------------------------------------------
-     Image handling
+     Image Handling
   --------------------------------------------------------- */
 
   const handleImageChange = (event) => {
@@ -775,11 +776,6 @@ function CreateDonation() {
       errors.address = "Pickup location is required.";
     }
 
-    /*
-      IMPORTANT:
-      A text address is not enough for the map.
-      We require actual coordinates.
-    */
     const latitude = Number(locationCoordinates.latitude);
 
     const longitude = Number(locationCoordinates.longitude);
@@ -801,7 +797,6 @@ function CreateDonation() {
 
     if (preparedAt && pickupDeadline) {
       const preparedDate = parseDateTime(preparedAt);
-
       const deadlineDate = parseDateTime(pickupDeadline);
 
       if (!preparedDate || !deadlineDate) {
@@ -834,20 +829,17 @@ function CreateDonation() {
     setSuccess("");
 
     /*
-      If the user typed an address but hasn't blurred the
-      field yet, we still geocode it here.
+      If the user typed an address but hasn't blurred
+      the field yet, geocode it here.
     */
     if (
       address.trim() &&
       (locationCoordinates.latitude === null ||
         locationCoordinates.longitude === null)
     ) {
-      setLocationLoading(true);
-
       const coordinates = await geocodeAddress(address);
 
       if (!coordinates) {
-        setLocationLoading(false);
         setError(
           "Please enter a pickup address that can be located on the map before posting the donation.",
         );
@@ -897,8 +889,7 @@ function CreateDonation() {
       formData.append("pickupDeadline", toApiDateTime(pickupDeadline));
 
       /*
-        This is the important part:
-        MongoDB will now receive real coordinates.
+        MongoDB will receive the actual coordinates.
       */
       formData.append(
         "location",
@@ -960,7 +951,7 @@ function CreateDonation() {
   };
 
   /* ---------------------------------------------------------
-     Image cleanup
+     Image Cleanup
   --------------------------------------------------------- */
 
   useEffect(() => {
@@ -1006,7 +997,7 @@ function CreateDonation() {
             onSubmit={handleSubmit}
             className="rounded-[2rem] border border-white/70 bg-white/65 p-6 shadow-lg backdrop-blur-xl md:p-8"
           >
-            {/* Food name */}
+            {/* Food Name */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
                 Food name
@@ -1171,7 +1162,7 @@ function CreateDonation() {
               </div>
             </div>
 
-            {/* Prepared + deadline */}
+            {/* Prepared + Deadline */}
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <DateTimeField
                 label="When was the food prepared?"
@@ -1207,7 +1198,7 @@ function CreateDonation() {
               />
             </div>
 
-            {/* Pickup location */}
+            {/* Pickup Location */}
             <div className="mt-5">
               <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
                 Pickup location
@@ -1393,7 +1384,7 @@ function CreateDonation() {
             </button>
           </form>
 
-          {/* Side information */}
+          {/* Side Information */}
           <div className="space-y-6">
             <div className="relative min-h-[280px] overflow-hidden rounded-[2rem] bg-[#16796f] p-7 text-white shadow-xl">
               <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-[#fdd8a5]/30 blur-2xl" />

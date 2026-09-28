@@ -23,7 +23,7 @@ const register = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       phone,
       password: hashedPassword,
     });
@@ -38,9 +38,10 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Registration error:", error);
+
     res.status(500).json({
       message: "Registration failed",
-      error: error.message,
     });
   }
 };
@@ -93,9 +94,10 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
+
     res.status(500).json({
       message: "Login failed",
-      error: error.message,
     });
   }
 };
@@ -120,6 +122,7 @@ const updateRole = async (req, res) => {
     }
 
     user.role = role;
+
     await user.save();
 
     const token = jwt.sign(
@@ -145,62 +148,10 @@ const updateRole = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Role update error:", error);
+
     res.status(500).json({
       message: "Failed to update role",
-      error: error.message,
-    });
-  }
-};
-
-// Development-only password reset
-const resetPassword = async (req, res) => {
-  try {
-    // Prevent this temporary endpoint from being used in production
-    if (process.env.NODE_ENV === "production") {
-      return res.status(403).json({
-        message: "Password reset endpoint is disabled in production.",
-      });
-    }
-
-    const { email, newPassword } = req.body;
-
-    if (!email || !newPassword) {
-      return res.status(400).json({
-        message: "Email and new password are required.",
-      });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        message: "New password must be at least 6 characters.",
-      });
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const user = await User.findOne({
-      email: normalizedEmail,
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        message: "No account found with this email.",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    user.password = hashedPassword;
-
-    await user.save();
-
-    res.json({
-      message: "Password reset successfully.",
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Password reset failed",
-      error: error.message,
     });
   }
 };
@@ -209,5 +160,4 @@ module.exports = {
   register,
   login,
   updateRole,
-  resetPassword,
 };

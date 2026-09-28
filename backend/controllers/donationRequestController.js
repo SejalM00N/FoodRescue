@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const DonationRequest = require("../models/DonationRequest");
 const Donation = require("../models/Donation");
 const Delivery = require("../models/Delivery");
@@ -16,12 +17,29 @@ const createRequest = async (req, res) => {
     // Delivery location is mandatory
     if (
       !deliveryLocation ||
-      !deliveryLocation.address ||
+      typeof deliveryLocation.address !== "string" ||
+      !deliveryLocation.address.trim() ||
       deliveryLocation.latitude == null ||
       deliveryLocation.longitude == null
     ) {
       return res.status(400).json({
         message: "Delivery location is required",
+      });
+    }
+
+    const latitude = Number(deliveryLocation.latitude);
+    const longitude = Number(deliveryLocation.longitude);
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return res.status(400).json({
+        message: "Invalid delivery coordinates",
       });
     }
 
@@ -79,8 +97,8 @@ const createRequest = async (req, res) => {
       message,
       deliveryLocation: {
         address: deliveryLocation.address.trim(),
-        latitude: Number(deliveryLocation.latitude),
-        longitude: Number(deliveryLocation.longitude),
+        latitude,
+        longitude,
       },
     });
 
@@ -97,7 +115,6 @@ const createRequest = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to create donation request",
-      error: error.message,
     });
   }
 };
@@ -119,7 +136,6 @@ const getMyRequests = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch requests",
-      error: error.message,
     });
   }
 };
@@ -162,7 +178,6 @@ const getDonationRequests = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch donation requests",
-      error: error.message,
     });
   }
 };
@@ -217,7 +232,16 @@ const updateRequestStatus = async (req, res) => {
       request.status = "rejected";
       await request.save();
 
-      request.donation.status = "available";
+      // Do not make an already-expired donation available again
+      if (
+        request.donation.pickupDeadline &&
+        new Date(request.donation.pickupDeadline) <= new Date()
+      ) {
+        request.donation.status = "expired";
+      } else {
+        request.donation.status = "available";
+      }
+
       await request.donation.save();
 
       return res.json({
@@ -253,12 +277,29 @@ const updateRequestStatus = async (req, res) => {
     // Make sure the request contains a valid delivery location
     if (
       !request.deliveryLocation ||
-      !request.deliveryLocation.address ||
+      typeof request.deliveryLocation.address !== "string" ||
+      !request.deliveryLocation.address.trim() ||
       request.deliveryLocation.latitude == null ||
       request.deliveryLocation.longitude == null
     ) {
       return res.status(400).json({
         message: "Delivery location is missing from this request",
+      });
+    }
+
+    const latitude = Number(request.deliveryLocation.latitude);
+    const longitude = Number(request.deliveryLocation.longitude);
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return res.status(400).json({
+        message: "Invalid delivery coordinates",
       });
     }
 
@@ -273,8 +314,8 @@ const updateRequestStatus = async (req, res) => {
       });
     }
 
-    // Generate 6-digit verification OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate secure 6-digit verification OTP
+    const otp = crypto.randomInt(100000, 1000000).toString();
 
     // Update request
     request.status = "accepted";
@@ -291,9 +332,9 @@ const updateRequestStatus = async (req, res) => {
       ngo: request.ngo._id,
       deliveryFee: 50,
       deliveryLocation: {
-        address: request.deliveryLocation.address,
-        latitude: Number(request.deliveryLocation.latitude),
-        longitude: Number(request.deliveryLocation.longitude),
+        address: request.deliveryLocation.address.trim(),
+        latitude,
+        longitude,
       },
       otp,
     });
@@ -308,7 +349,6 @@ const updateRequestStatus = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to update request",
-      error: error.message,
     });
   }
 };

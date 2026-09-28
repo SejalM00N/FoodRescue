@@ -13,26 +13,35 @@ const deliverySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     deliveryFee: {
       type: Number,
       default: 0,
       min: 0,
     },
+
     deliveryLocation: {
       address: {
         type: String,
         required: true,
         trim: true,
       },
+
       latitude: {
         type: Number,
         required: true,
+        min: -90,
+        max: 90,
       },
+
       longitude: {
         type: Number,
         required: true,
+        min: -180,
+        max: 180,
       },
     },
+
     volunteer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -53,6 +62,7 @@ const deliverySchema = new mongoose.Schema(
 
     otp: {
       type: String,
+      match: /^\d{6}$/,
     },
 
     otpVerified: {

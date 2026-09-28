@@ -18,8 +18,10 @@ const updateProfile = async (req, res) => {
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     const existingUser = await User.findOne({
-      email,
+      email: normalizedEmail,
       _id: { $ne: req.user.id },
     });
 
@@ -38,7 +40,7 @@ const updateProfile = async (req, res) => {
     }
 
     user.name = name.trim();
-    user.email = email.trim().toLowerCase();
+    user.email = normalizedEmail;
     user.phone = phone;
 
     await user.save();
@@ -58,9 +60,10 @@ const updateProfile = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Profile update error:", error);
+
     res.status(500).json({
       message: "Failed to update profile",
-      error: error.message,
     });
   }
 };
@@ -79,6 +82,27 @@ const updateLocation = async (req, res) => {
     if (typeof latitude !== "number" || typeof longitude !== "number") {
       return res.status(400).json({
         message: "Latitude and longitude are required",
+      });
+    }
+
+    if (
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return res.status(400).json({
+        message: "Invalid latitude or longitude",
+      });
+    }
+
+    if (
+      locationAccuracy !== undefined &&
+      locationAccuracy !== null &&
+      (typeof locationAccuracy !== "number" || locationAccuracy < 0)
+    ) {
+      return res.status(400).json({
+        message: "Invalid location accuracy",
       });
     }
 
@@ -113,9 +137,10 @@ const updateLocation = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Location update error:", error);
+
     res.status(500).json({
       message: "Failed to update location",
-      error: error.message,
     });
   }
 };
@@ -164,9 +189,10 @@ const changePassword = async (req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
+    console.error("Password change error:", error);
+
     res.status(500).json({
       message: "Failed to change password",
-      error: error.message,
     });
   }
 };

@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const Delivery = require("../models/Delivery");
 const DonationRequest = require("../models/DonationRequest");
 const Donation = require("../models/Donation");
@@ -53,12 +54,29 @@ const createDelivery = async (req, res) => {
     // Delivery requires the NGO-selected delivery location
     if (
       !request.deliveryLocation ||
-      !request.deliveryLocation.address ||
+      typeof request.deliveryLocation.address !== "string" ||
+      !request.deliveryLocation.address.trim() ||
       request.deliveryLocation.latitude == null ||
       request.deliveryLocation.longitude == null
     ) {
       return res.status(400).json({
         message: "Delivery location is missing from the donation request",
+      });
+    }
+
+    const latitude = Number(request.deliveryLocation.latitude);
+    const longitude = Number(request.deliveryLocation.longitude);
+
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return res.status(400).json({
+        message: "Invalid delivery coordinates",
       });
     }
 
@@ -73,13 +91,17 @@ const createDelivery = async (req, res) => {
       });
     }
 
-    // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate a secure 6-digit OTP
+    const otp = crypto.randomInt(100000, 1000000).toString();
 
     const delivery = await Delivery.create({
       donation: request.donation._id,
       ngo: request.ngo._id,
-      deliveryLocation: request.deliveryLocation,
+      deliveryLocation: {
+        address: request.deliveryLocation.address.trim(),
+        latitude,
+        longitude,
+      },
       otp,
     });
 
@@ -92,7 +114,6 @@ const createDelivery = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to create delivery",
-      error: error.message,
     });
   }
 };
@@ -117,7 +138,6 @@ const getAvailableDeliveries = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch available deliveries",
-      error: error.message,
     });
   }
 };
@@ -186,15 +206,28 @@ const acceptDelivery = async (req, res) => {
         });
       }
 
+      const latitude = Number(request.deliveryLocation.latitude);
+      const longitude = Number(request.deliveryLocation.longitude);
+
+      if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
+      ) {
+        return res.status(400).json({
+          message: "Invalid delivery coordinates",
+        });
+      }
+
       delivery.deliveryLocation = {
         address: request.deliveryLocation.address,
-        latitude: Number(request.deliveryLocation.latitude),
-        longitude: Number(request.deliveryLocation.longitude),
+        latitude,
+        longitude,
       };
     }
-
-    delivery.volunteer = req.user.id;
-    delivery.pickupStatus = "accepted";
 
     delivery.volunteer = req.user.id;
     delivery.pickupStatus = "accepted";
@@ -210,7 +243,6 @@ const acceptDelivery = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to accept delivery",
-      error: error.message,
     });
   }
 };
@@ -247,9 +279,6 @@ const markPickedUp = async (req, res) => {
       });
     }
 
-    delivery.pickupStatus = "picked_up";
-    delivery.deliveryStatus = "in_transit";
-
     const donation = await Donation.findById(delivery.donation);
 
     if (!donation) {
@@ -267,6 +296,10 @@ const markPickedUp = async (req, res) => {
     donation.status = "in_transit";
 
     await donation.save();
+
+    delivery.pickupStatus = "picked_up";
+    delivery.deliveryStatus = "in_transit";
+
     await delivery.save();
 
     res.json({
@@ -278,7 +311,6 @@ const markPickedUp = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to update pickup status",
-      error: error.message,
     });
   }
 };
@@ -308,7 +340,6 @@ const getMyDeliveries = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch your deliveries",
-      error: error.message,
     });
   }
 };
@@ -331,7 +362,6 @@ const getMyNGODeliveries = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch NGO deliveries",
-      error: error.message,
     });
   }
 };
@@ -381,7 +411,6 @@ const markDelivered = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to mark delivery as delivered",
-      error: error.message,
     });
   }
 };
@@ -395,6 +424,12 @@ const verifyDelivery = async (req, res) => {
     if (!otp) {
       return res.status(400).json({
         message: "OTP is required",
+      });
+    }
+
+    if (!/^\d{6}$/.test(String(otp))) {
+      return res.status(400).json({
+        message: "OTP must contain exactly 6 digits",
       });
     }
 
@@ -433,10 +468,6 @@ const verifyDelivery = async (req, res) => {
       });
     }
 
-    // Complete the delivery
-    delivery.otpVerified = true;
-    delivery.deliveryStatus = "verified";
-
     const donation = await Donation.findById(delivery.donation);
 
     if (!donation) {
@@ -450,6 +481,10 @@ const verifyDelivery = async (req, res) => {
         message: "Donation is not in the correct delivery state",
       });
     }
+
+    // Complete the delivery
+    delivery.otpVerified = true;
+    delivery.deliveryStatus = "verified";
 
     donation.status = "completed";
 
@@ -477,7 +512,6 @@ const verifyDelivery = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to verify delivery",
-      error: error.message,
     });
   }
 };

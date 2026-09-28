@@ -36,9 +36,9 @@ function DonorDashboard() {
 
       if (Array.isArray(data)) {
         setDonations(data);
-      } else if (Array.isArray(data.donations)) {
+      } else if (Array.isArray(data?.donations)) {
         setDonations(data.donations);
-      } else if (Array.isArray(data.data)) {
+      } else if (Array.isArray(data?.data)) {
         setDonations(data.data);
       } else {
         setDonations([]);
@@ -53,12 +53,10 @@ function DonorDashboard() {
 
   const totalDonations = donations.length;
 
-  const activeDonations = donations.filter(
-    (donation) =>
-      donation.status === "available" ||
-      donation.status === "requested" ||
-      donation.status === "accepted" ||
-      donation.status === "in_transit",
+  const activeDonations = donations.filter((donation) =>
+    ["available", "requested", "accepted", "in_transit"].includes(
+      donation.status,
+    ),
   ).length;
 
   const completedDonations = donations.filter(
@@ -73,14 +71,20 @@ function DonorDashboard() {
     if (!status) return "Available";
 
     return status
-      .replace("_", " ")
+      .replace(/_/g, " ")
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
   const formatTime = (date) => {
     if (!date) return "";
 
-    return new Date(date).toLocaleString("en-IN", {
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "";
+    }
+
+    return parsedDate.toLocaleString("en-IN", {
       day: "numeric",
       month: "short",
       hour: "numeric",
@@ -94,7 +98,7 @@ function DonorDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -113,6 +117,7 @@ function DonorDashboard() {
         {/* Navigation */}
         <nav className="mt-12 space-y-2">
           <button
+            type="button"
             onClick={() => navigate("/donor-dashboard")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left font-medium"
           >
@@ -121,6 +126,7 @@ function DonorDashboard() {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/create-donation")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
@@ -129,6 +135,7 @@ function DonorDashboard() {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/my-donations")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
@@ -137,6 +144,7 @@ function DonorDashboard() {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/donation-requests")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
@@ -145,6 +153,7 @@ function DonorDashboard() {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/settings")}
             className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
           >
@@ -155,6 +164,7 @@ function DonorDashboard() {
 
         {/* Logout */}
         <button
+          type="button"
           onClick={handleLogout}
           className="mt-auto flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-blue-100 transition hover:bg-white/10"
         >
@@ -182,6 +192,7 @@ function DonorDashboard() {
           </div>
 
           <button
+            type="button"
             onClick={() => navigate("/create-donation")}
             className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-[#16796f]"
           >
@@ -245,6 +256,7 @@ function DonorDashboard() {
               </div>
 
               <button
+                type="button"
                 onClick={() => navigate("/my-donations")}
                 className="flex cursor-pointer items-center gap-1 text-sm font-semibold text-[#16796f]"
               >
@@ -298,14 +310,16 @@ function DonorDashboard() {
                         <CheckCircle size={17} className="text-[#16796f]" />
                       )}
 
-                      {(donation.status === "accepted" ||
-                        donation.status === "requested" ||
-                        donation.status === "in_transit") && (
-                        <Clock size={17} className="text-[#4f81b7]" />
-                      )}
+                      {["accepted", "requested", "in_transit"].includes(
+                        donation.status,
+                      ) && <Clock size={17} className="text-[#4f81b7]" />}
 
                       {donation.status === "available" && (
                         <Package size={17} className="text-[#16796f]" />
+                      )}
+
+                      {donation.status === "expired" && (
+                        <Clock size={17} className="text-slate-400" />
                       )}
 
                       <span className="text-sm font-semibold text-[#16796f]">
@@ -331,6 +345,7 @@ function DonorDashboard() {
             </p>
 
             <button
+              type="button"
               onClick={() => navigate("/create-donation")}
               className="mt-7 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#fdd8a5] px-5 py-3 font-semibold text-[#0b306b] transition hover:bg-white"
             >

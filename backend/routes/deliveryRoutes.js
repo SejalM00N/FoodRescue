@@ -57,7 +57,7 @@ router.put(
   markDelivered,
 );
 
-// NGO verifies delivery using OTP
+// Volunteer verifies delivery using OTP provided by NGO
 router.put(
   "/:deliveryId/verify",
   protect,

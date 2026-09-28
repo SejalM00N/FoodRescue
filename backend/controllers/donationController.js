@@ -9,8 +9,11 @@ const uploadToCloudinary = (buffer) => {
         resource_type: "image",
       },
       (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
       },
     );
 
@@ -46,6 +49,18 @@ const createDonation = async (req, res) => {
       description,
     } = req.body;
 
+    let parsedLocation = location;
+
+    if (typeof location === "string") {
+      try {
+        parsedLocation = JSON.parse(location);
+      } catch (error) {
+        return res.status(400).json({
+          message: "Invalid location data",
+        });
+      }
+    }
+
     let imageUrl = "";
 
     if (req.file) {
@@ -60,7 +75,7 @@ const createDonation = async (req, res) => {
       unit,
       preparedAt,
       pickupDeadline,
-      location: typeof location === "string" ? JSON.parse(location) : location,
+      location: parsedLocation,
       description,
       imageUrl,
       donor: req.user.id,
@@ -75,7 +90,6 @@ const createDonation = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to create donation",
-      error: error.message,
     });
   }
 };
@@ -96,7 +110,6 @@ const getMyDonations = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch donations",
-      error: error.message,
     });
   }
 };
@@ -118,7 +131,6 @@ const getAvailableDonations = async (req, res) => {
 
     res.status(500).json({
       message: "Failed to fetch available donations",
-      error: error.message,
     });
   }
 };

@@ -37,9 +37,10 @@ const createOrUpdateProfile = async (req, res) => {
       profile,
     });
   } catch (error) {
+    console.error("NGO profile save error:", error);
+
     res.status(500).json({
       message: "Failed to save NGO profile",
-      error: error.message,
     });
   }
 };
@@ -61,9 +62,10 @@ const getMyProfile = async (req, res) => {
       profile,
     });
   } catch (error) {
+    console.error("NGO profile fetch error:", error);
+
     res.status(500).json({
       message: "Failed to fetch NGO profile",
-      error: error.message,
     });
   }
 };

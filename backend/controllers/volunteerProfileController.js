@@ -26,9 +26,10 @@ const createOrUpdateProfile = async (req, res) => {
       profile,
     });
   } catch (error) {
+    console.error("Volunteer profile save error:", error);
+
     res.status(500).json({
       message: "Failed to save volunteer profile",
-      error: error.message,
     });
   }
 };
@@ -50,9 +51,10 @@ const getMyProfile = async (req, res) => {
       profile,
     });
   } catch (error) {
+    console.error("Volunteer profile fetch error:", error);
+
     res.status(500).json({
       message: "Failed to fetch volunteer profile",
-      error: error.message,
     });
   }
 };
