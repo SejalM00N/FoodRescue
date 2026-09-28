@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
   PlusCircle,
   Package,
-  ClipboardList,
-  Settings,
-  LogOut,
   Utensils,
   Clock,
   CheckCircle,
@@ -13,11 +9,12 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import DashboardLayout from "../components/DashboardLayout.jsx";
 import api from "../services/api";
 
 function DonorDashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,97 +93,21 @@ function DonorDashboard() {
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, 3);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
-
   return (
-    <div className="flex min-h-screen bg-[#fdf6ec]">
-      {/* Sidebar */}
-      <aside className="hidden w-64 flex-col bg-[#0b306b] p-6 text-white md:flex">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#16796f]">
-            <Utensils size={19} />
-          </div>
-
-          <span className="text-xl font-bold">FoodRescue</span>
-        </div>
-
-        {/* Navigation */}
-        <nav className="mt-12 space-y-2">
-          <button
-            type="button"
-            onClick={() => navigate("/donor-dashboard")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left font-medium"
-          >
-            <LayoutDashboard size={19} />
-            Dashboard
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/create-donation")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <PlusCircle size={19} />
-            Create Donation
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/my-donations")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Package size={19} />
-            My Donations
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/donation-requests")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <ClipboardList size={19} />
-            Requests
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/settings")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Settings size={19} />
-            Settings
-          </button>
-        </nav>
-
-        {/* Logout */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-auto flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-blue-100 transition hover:bg-white/10"
-        >
-          <LogOut size={19} />
-          Logout
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 px-6 py-8 md:px-10">
+    <DashboardLayout role="donor">
+      <div className="px-4 py-6 sm:px-6 sm:py-8 md:px-10">
         {/* Header */}
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-[#16796f]">
               Donor Dashboard
             </p>
 
-            <h1 className="mt-1 text-3xl font-bold text-[#0b306b]">
+            <h1 className="mt-1 text-2xl font-bold text-[#0b306b] sm:text-3xl">
               Welcome back, {user?.name || "Donor"} 👋
             </h1>
 
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">
               Here's what's happening with your food donations.
             </p>
           </div>
@@ -194,7 +115,7 @@ function DonorDashboard() {
           <button
             type="button"
             onClick={() => navigate("/create-donation")}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-[#16796f]"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-[#16796f] sm:w-auto"
           >
             <PlusCircle size={19} />
             New Donation
@@ -202,8 +123,8 @@ function DonorDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Total Donations</p>
 
             <p className="mt-2 text-3xl font-bold text-[#0b306b]">
@@ -211,7 +132,7 @@ function DonorDashboard() {
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Meals Rescued</p>
 
             <p className="mt-2 text-3xl font-bold text-[#16796f]">
@@ -223,7 +144,7 @@ function DonorDashboard() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Active Donations</p>
 
             <p className="mt-2 text-3xl font-bold text-[#4f81b7]">
@@ -231,7 +152,7 @@ function DonorDashboard() {
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Completed</p>
 
             <p className="mt-2 text-3xl font-bold text-[#0b306b]">
@@ -243,8 +164,8 @@ function DonorDashboard() {
         {/* Main Grid */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {/* Recent Donations */}
-          <section className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl lg:col-span-2">
-            <div className="flex items-center justify-between">
+          <section className="min-w-0 rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6 lg:col-span-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold text-[#0b306b]">
                   Recent Donations
@@ -258,7 +179,7 @@ function DonorDashboard() {
               <button
                 type="button"
                 onClick={() => navigate("/my-donations")}
-                className="flex cursor-pointer items-center gap-1 text-sm font-semibold text-[#16796f]"
+                className="flex w-fit cursor-pointer items-center gap-1 text-sm font-semibold text-[#16796f]"
               >
                 View all
                 <ArrowRight size={16} />
@@ -288,13 +209,13 @@ function DonorDashboard() {
                     key={donation._id}
                     className="flex flex-col justify-between gap-4 rounded-2xl bg-[#fdf6ec] p-4 sm:flex-row sm:items-center"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
                         <Utensils size={20} />
                       </div>
 
-                      <div>
-                        <h3 className="font-semibold text-[#0b306b]">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-[#0b306b]">
                           {donation.foodName}
                         </h3>
 
@@ -305,7 +226,7 @@ function DonorDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                       {donation.status === "completed" && (
                         <CheckCircle size={17} className="text-[#16796f]" />
                       )}
@@ -333,7 +254,7 @@ function DonorDashboard() {
           </section>
 
           {/* Quick Action */}
-          <section className="rounded-3xl bg-[#0b306b] p-7 text-white shadow-xl">
+          <section className="rounded-3xl bg-[#0b306b] p-6 text-white shadow-xl sm:p-7">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
               <PlusCircle size={23} />
             </div>
@@ -354,8 +275,8 @@ function DonorDashboard() {
             </button>
           </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

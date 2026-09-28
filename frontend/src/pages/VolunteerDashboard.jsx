@@ -1,23 +1,11 @@
 import { useEffect, useState } from "react";
-import {
-  LayoutDashboard,
-  Search,
-  Truck,
-  Settings,
-  LogOut,
-  Bike,
-  CheckCircle,
-  ArrowRight,
-  MapPin,
-  Navigation,
-} from "lucide-react";
+import { Truck, CheckCircle, ArrowRight, MapPin, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
 import api from "../services/api";
+import DashboardLayout from "../components/DashboardLayout.jsx";
 
 function VolunteerDashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   const [availableDeliveries, setAvailableDeliveries] = useState([]);
   const [myDeliveries, setMyDeliveries] = useState([]);
@@ -25,11 +13,6 @@ function VolunteerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [acceptingId, setAcceptingId] = useState("");
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -79,7 +62,6 @@ function VolunteerDashboard() {
 
       console.log("DELIVERY ACCEPTED:", response.data);
 
-      // Move volunteer directly to the active delivery page.
       navigate("/lets-deliver");
     } catch (error) {
       console.error("ACCEPT DELIVERY ERROR:", error);
@@ -92,18 +74,14 @@ function VolunteerDashboard() {
     }
   };
 
-  // Pending, in-transit, and delivered deliveries
-  // are still part of the active workflow until NGO verification.
   const activeDeliveries = myDeliveries.filter((delivery) =>
     ["pending", "in_transit", "delivered"].includes(delivery.deliveryStatus),
   );
 
-  // Only NGO-verified deliveries count as completed.
   const completedDeliveries = myDeliveries.filter(
     (delivery) => delivery.deliveryStatus === "verified",
   );
 
-  // Earnings are added only after NGO verification.
   const verifiedDeliveries = myDeliveries.filter(
     (delivery) => delivery.deliveryStatus === "verified",
   );
@@ -122,89 +100,20 @@ function VolunteerDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#fdf6ec]">
-      {/* Sidebar */}
-      <aside className="hidden w-64 flex-col bg-[#0b306b] p-6 text-white md:flex">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#16796f]">
-            <Bike size={19} />
-          </div>
-
-          <span className="text-xl font-bold">FoodRescue</span>
-        </div>
-
-        <nav className="mt-12 space-y-2">
-          <button
-            type="button"
-            onClick={() => navigate("/volunteer-dashboard")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left font-medium"
-          >
-            <LayoutDashboard size={19} />
-            Dashboard
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/available-pickups")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Search size={19} />
-            Available Pickups
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/lets-deliver")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Navigation size={19} />
-            Let's Deliver
-          </button>
-
-          {/* My Deliveries */}
-          <button
-            type="button"
-            onClick={() => navigate("/my-deliveries")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Truck size={19} />
-            My Deliveries
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/settings")}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left text-blue-100 transition hover:bg-white/10"
-          >
-            <Settings size={19} />
-            Settings
-          </button>
-        </nav>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-auto flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-blue-100 transition hover:bg-white/10"
-        >
-          <LogOut size={19} />
-          Logout
-        </button>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 px-6 py-8 md:px-10">
-        {/* Header */}
+    <DashboardLayout role="volunteer">
+      <div className="px-4 py-6 sm:px-6 sm:py-8 md:px-10">
+        {/* HEADER */}
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-[#16796f]">
               Volunteer Dashboard
             </p>
 
-            <h1 className="mt-1 text-3xl font-bold text-[#0b306b]">
+            <h1 className="mt-1 text-2xl font-bold text-[#0b306b] sm:text-3xl">
               Ready to rescue some food? 👋
             </h1>
 
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">
               Find nearby pickups and help deliver food to NGOs.
             </p>
           </div>
@@ -212,24 +121,23 @@ function VolunteerDashboard() {
           <button
             type="button"
             onClick={() => navigate("/available-pickups")}
-            className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-[#16796f]"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-[#16796f] sm:w-auto"
           >
             <Search size={19} />
             Available Pickups
           </button>
         </div>
 
-        {/* Error */}
+        {/* ERROR */}
         {error && (
           <div className="mt-6 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">
             {error}
           </div>
         )}
 
-        {/* Stats */}
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Available Pickups */}
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+        {/* STATS */}
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Available Pickups</p>
 
             <p className="mt-2 text-3xl font-bold text-[#0b306b]">
@@ -237,8 +145,7 @@ function VolunteerDashboard() {
             </p>
           </div>
 
-          {/* Active Delivery */}
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Active Delivery</p>
 
             <p className="mt-2 text-3xl font-bold text-[#4f81b7]">
@@ -246,8 +153,7 @@ function VolunteerDashboard() {
             </p>
           </div>
 
-          {/* Meals Delivered */}
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Meals Delivered</p>
 
             <p className="mt-2 text-3xl font-bold text-[#16796f]">
@@ -255,8 +161,7 @@ function VolunteerDashboard() {
             </p>
           </div>
 
-          {/* Earnings */}
-          <div className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6">
             <p className="text-sm text-slate-500">Earnings</p>
 
             <p className="mt-2 text-3xl font-bold text-[#0b306b]">
@@ -267,11 +172,11 @@ function VolunteerDashboard() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* MAIN CONTENT */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          {/* Pickups */}
-          <section className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl lg:col-span-2">
-            <div className="flex items-center justify-between">
+          {/* AVAILABLE PICKUPS */}
+          <section className="min-w-0 rounded-3xl border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-xl sm:p-6 lg:col-span-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold text-[#0b306b]">
                   Available Pickups
@@ -285,21 +190,21 @@ function VolunteerDashboard() {
               <button
                 type="button"
                 onClick={() => navigate("/available-pickups")}
-                className="flex cursor-pointer items-center gap-1 text-sm font-semibold text-[#16796f]"
+                className="flex w-fit cursor-pointer items-center gap-1 text-sm font-semibold text-[#16796f]"
               >
                 View all
                 <ArrowRight size={16} />
               </button>
             </div>
 
-            {/* Loading */}
+            {/* LOADING */}
             {loading && (
               <div className="py-12 text-center text-sm text-slate-500">
                 Loading available pickups...
               </div>
             )}
 
-            {/* Empty */}
+            {/* EMPTY */}
             {!loading && !error && availableDeliveries.length === 0 && (
               <div className="mt-6 rounded-2xl bg-[#fdf6ec] px-5 py-10 text-center">
                 <Truck size={38} className="mx-auto text-[#4f81b7]" />
@@ -315,7 +220,7 @@ function VolunteerDashboard() {
               </div>
             )}
 
-            {/* Real pickups */}
+            {/* REAL PICKUPS */}
             {!loading && availableDeliveries.length > 0 && (
               <div className="mt-6 space-y-4">
                 {availableDeliveries.slice(0, 3).map((delivery) => {
@@ -330,12 +235,12 @@ function VolunteerDashboard() {
                       className="rounded-2xl bg-[#fdf6ec] p-4"
                     >
                       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                        <div className="flex items-center gap-4">
+                        <div className="flex min-w-0 items-center gap-4">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
                             <Truck size={20} />
                           </div>
 
-                          <div>
+                          <div className="min-w-0">
                             <h3 className="font-semibold text-[#0b306b]">
                               {donation?.foodName || "Food Donation"}
                             </h3>
@@ -350,13 +255,13 @@ function VolunteerDashboard() {
                               </p>
                             )}
 
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 truncate text-xs text-slate-400">
                               Donor →{" "}
                               {donation?.location?.address || "Pickup location"}
                             </p>
 
                             <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
-                              <MapPin size={13} />
+                              <MapPin size={13} className="shrink-0" />
                               Delivery to {ngo?.name || "NGO"}
                             </div>
                           </div>
@@ -366,7 +271,7 @@ function VolunteerDashboard() {
                           type="button"
                           onClick={() => handleAcceptPickup(delivery._id)}
                           disabled={isAccepting}
-                          className="cursor-pointer rounded-xl bg-[#16796f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0b306b] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="w-full cursor-pointer rounded-xl bg-[#16796f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0b306b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                           {isAccepting ? "Accepting..." : "Accept Pickup"}
                         </button>
@@ -378,8 +283,8 @@ function VolunteerDashboard() {
             )}
           </section>
 
-          {/* Impact card */}
-          <section className="rounded-3xl bg-[#0b306b] p-7 text-white shadow-xl">
+          {/* IMPACT CARD */}
+          <section className="rounded-3xl bg-[#0b306b] p-6 text-white shadow-xl sm:p-7">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
               <CheckCircle size={23} />
             </div>
@@ -409,8 +314,8 @@ function VolunteerDashboard() {
             </button>
           </section>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import DashboardLayout from "../components/DashboardLayout.jsx";
 
 /* ---------------------------------------------------------
    Helpers
@@ -107,9 +108,7 @@ function DateTimeField({
   };
 
   const [day, setDay] = useState(current ? current.getDate() : "");
-
   const [month, setMonth] = useState(current ? current.getMonth() + 1 : "");
-
   const [year, setYear] = useState(current ? current.getFullYear() : "");
 
   const [hour, setHour] = useState(
@@ -206,7 +205,6 @@ function DateTimeField({
       return false;
     }
 
-    // Prevent invalid dates such as 31 February.
     if (
       date.getFullYear() !== Number(nextYear) ||
       date.getMonth() !== Number(nextMonth) - 1 ||
@@ -305,7 +303,7 @@ function DateTimeField({
         </div>
 
         {/* Date */}
-        <div className="grid grid-cols-[1fr_auto_1fr_auto_1.4fr] items-center gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1.4fr)] items-center gap-1.5 sm:gap-2">
           <input
             type="number"
             min="1"
@@ -313,7 +311,7 @@ function DateTimeField({
             placeholder="DD"
             value={day}
             onChange={(e) => handleChange(setDay, "day", e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
+            className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-1.5 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 sm:px-2"
           />
 
           <span className="font-bold text-slate-300">/</span>
@@ -325,7 +323,7 @@ function DateTimeField({
             placeholder="MM"
             value={month}
             onChange={(e) => handleChange(setMonth, "month", e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
+            className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-1.5 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 sm:px-2"
           />
 
           <span className="font-bold text-slate-300">/</span>
@@ -337,13 +335,13 @@ function DateTimeField({
             placeholder="YYYY"
             value={year}
             onChange={(e) => handleChange(setYear, "year", e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
+            className="w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-1.5 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 sm:px-2"
           />
         </div>
 
         {/* Time */}
-        <div className="mt-3 flex items-center gap-2">
-          <Clock size={15} className="text-[#16796f]" />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Clock size={15} className="shrink-0 text-[#16796f]" />
 
           <input
             type="number"
@@ -352,7 +350,7 @@ function DateTimeField({
             placeholder="HH"
             value={hour}
             onChange={(e) => handleChange(setHour, "hour", e.target.value)}
-            className="w-20 rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
+            className="w-16 shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 sm:w-20"
           />
 
           <span className="font-bold text-slate-400">:</span>
@@ -364,7 +362,7 @@ function DateTimeField({
             placeholder="MM"
             value={minute}
             onChange={(e) => handleChange(setMinute, "minute", e.target.value)}
-            className="w-20 rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
+            className="w-16 shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-2 py-2.5 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 sm:w-20"
           />
 
           <div className="ml-1 flex overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
@@ -395,7 +393,7 @@ function DateTimeField({
         </div>
 
         {value && (
-          <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+          <div className="mt-3 flex flex-col gap-1 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-xs text-slate-400">Selected</span>
 
             <span className="text-xs font-semibold text-[#16796f]">
@@ -486,10 +484,6 @@ function CreateDonation() {
 
       let data = await response.json();
 
-      /*
-        If the first search doesn't find anything,
-        try the original address without adding India.
-      */
       if (!data.length) {
         const fallbackUrl =
           `https://nominatim.openstreetmap.org/search` +
@@ -608,11 +602,6 @@ function CreateDonation() {
           longitude,
         };
 
-        /*
-          Save coordinates immediately.
-          This means the donation still has valid coordinates
-          even if reverse geocoding has a temporary problem.
-        */
         setLocationCoordinates(coordinates);
 
         try {
@@ -659,10 +648,6 @@ function CreateDonation() {
         } catch (locationError) {
           console.error("REVERSE GEOCODING FAILED:", locationError);
 
-          /*
-            Do NOT erase the coordinates here.
-            Browser GPS already gave us valid coordinates.
-          */
           setError(
             "Location detected, but the readable address could not be found. You can enter the pickup address manually.",
           );
@@ -777,7 +762,6 @@ function CreateDonation() {
     }
 
     const latitude = Number(locationCoordinates.latitude);
-
     const longitude = Number(locationCoordinates.longitude);
 
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
@@ -828,10 +812,6 @@ function CreateDonation() {
     setError("");
     setSuccess("");
 
-    /*
-      If the user typed an address but hasn't blurred
-      the field yet, geocode it here.
-    */
     if (
       address.trim() &&
       (locationCoordinates.latitude === null ||
@@ -855,11 +835,7 @@ function CreateDonation() {
     setLoading(true);
 
     try {
-      /*
-        Final safety check immediately before sending.
-      */
       const latitude = Number(locationCoordinates.latitude);
-
       const longitude = Number(locationCoordinates.longitude);
 
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
@@ -877,20 +853,12 @@ function CreateDonation() {
       const formData = new FormData();
 
       formData.append("foodName", foodName.trim());
-
       formData.append("category", category);
-
       formData.append("quantity", String(Number(quantity)));
-
       formData.append("unit", unit);
-
       formData.append("preparedAt", toApiDateTime(preparedAt));
-
       formData.append("pickupDeadline", toApiDateTime(pickupDeadline));
 
-      /*
-        MongoDB will receive the actual coordinates.
-      */
       formData.append(
         "location",
         JSON.stringify({
@@ -963,471 +931,458 @@ function CreateDonation() {
   }, [imagePreview]);
 
   return (
-    <div className="min-h-screen bg-[#fdf6ec] px-6 py-8">
-      {/* Back */}
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="mb-6 flex cursor-pointer items-center gap-2 text-sm font-medium text-[#0b306b] transition hover:text-[#16796f]"
-      >
-        <ArrowLeft size={18} />
-        Back to Dashboard
-      </button>
+    <DashboardLayout role="donor">
+      <div className="min-h-screen bg-[#fdf6ec] px-4 py-6 sm:px-6 sm:py-8">
+        {/* Back */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-6 flex cursor-pointer items-center gap-2 text-sm font-medium text-[#0b306b] transition hover:text-[#16796f]"
+        >
+          <ArrowLeft size={18} />
+          Back to Dashboard
+        </button>
 
-      <div className="mx-auto max-w-6xl">
-        {/* Heading */}
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#16796f]">
-            Donor
-          </p>
+        <div className="mx-auto max-w-6xl">
+          {/* Heading */}
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-[#16796f]">
+              Donor
+            </p>
 
-          <h1 className="mt-2 text-4xl font-bold text-[#0b306b]">
-            Share surplus food
-          </h1>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-[#0b306b] sm:text-4xl">
+              Share surplus food
+            </h1>
 
-          <p className="mt-2 text-slate-500">
-            Tell us about the food you would like to rescue.
-          </p>
-        </div>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">
+              Tell us about the food you would like to rescue.
+            </p>
+          </div>
 
-        {/* Form + Visual */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_0.8fr]">
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-[2rem] border border-white/70 bg-white/65 p-6 shadow-lg backdrop-blur-xl md:p-8"
-          >
-            {/* Food Name */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                Food name
-              </label>
-
-              <div
-                className={`flex items-center gap-3 rounded-2xl border bg-white/80 px-4 py-3 transition ${
-                  fieldErrors.foodName
-                    ? "border-red-300"
-                    : "border-slate-200 focus-within:border-[#16796f] focus-within:ring-2 focus-within:ring-[#16796f]/10"
-                }`}
-              >
-                <Utensils size={18} className="text-[#4f81b7]" />
-
-                <input
-                  type="text"
-                  placeholder="e.g. Vegetable Biryani"
-                  value={foodName}
-                  onChange={(e) => {
-                    setFoodName(e.target.value);
-
-                    setFieldErrors((current) => ({
-                      ...current,
-                      foodName: "",
-                    }));
-                  }}
-                  required
-                  className="w-full bg-transparent outline-none placeholder:text-slate-400"
-                />
-              </div>
-
-              {fieldErrors.foodName && (
-                <p className="mt-1.5 text-xs font-medium text-red-500">
-                  {fieldErrors.foodName}
-                </p>
-              )}
-            </div>
-
-            {/* Category */}
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                Food category
-              </label>
-
-              <select
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-
-                  setFieldErrors((current) => ({
-                    ...current,
-                    category: "",
-                  }));
-                }}
-                required
-                className={`w-full rounded-2xl border bg-white/80 px-4 py-3 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 ${
-                  fieldErrors.category ? "border-red-300" : "border-slate-200"
-                }`}
-              >
-                <option value="">Select category</option>
-
-                <option value="cooked-meal">Cooked Meal</option>
-
-                <option value="bakery">Bakery</option>
-
-                <option value="fruits">Fruits</option>
-
-                <option value="vegetables">Vegetables</option>
-
-                <option value="packaged-food">Packaged Food</option>
-
-                <option value="other">Other</option>
-              </select>
-
-              {fieldErrors.category && (
-                <p className="mt-1.5 text-xs font-medium text-red-500">
-                  {fieldErrors.category}
-                </p>
-              )}
-            </div>
-
-            {/* Quantity + Unit */}
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          {/* Form + Visual */}
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_0.8fr]">
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-[2rem] border border-white/70 bg-white/65 p-5 shadow-lg backdrop-blur-xl sm:p-6 md:p-8"
+            >
+              {/* Food Name */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                  Quantity
+                  Food name
                 </label>
 
                 <div
                   className={`flex items-center gap-3 rounded-2xl border bg-white/80 px-4 py-3 transition ${
-                    fieldErrors.quantity
+                    fieldErrors.foodName
                       ? "border-red-300"
                       : "border-slate-200 focus-within:border-[#16796f] focus-within:ring-2 focus-within:ring-[#16796f]/10"
                   }`}
                 >
-                  <Package size={18} className="text-[#4f81b7]" />
+                  <Utensils size={18} className="shrink-0 text-[#4f81b7]" />
 
                   <input
-                    type="number"
-                    min="1"
-                    step="any"
-                    placeholder="e.g. 20"
-                    value={quantity}
+                    type="text"
+                    placeholder="e.g. Vegetable Biryani"
+                    value={foodName}
                     onChange={(e) => {
-                      setQuantity(e.target.value);
+                      setFoodName(e.target.value);
 
                       setFieldErrors((current) => ({
                         ...current,
-                        quantity: "",
+                        foodName: "",
                       }));
                     }}
                     required
-                    className="w-full bg-transparent outline-none placeholder:text-slate-400"
+                    className="min-w-0 w-full bg-transparent outline-none placeholder:text-slate-400"
                   />
                 </div>
 
-                {fieldErrors.quantity && (
+                {fieldErrors.foodName && (
                   <p className="mt-1.5 text-xs font-medium text-red-500">
-                    {fieldErrors.quantity}
+                    {fieldErrors.foodName}
                   </p>
                 )}
               </div>
 
-              <div>
+              {/* Category */}
+              <div className="mt-5">
                 <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                  Unit
+                  Food category
                 </label>
 
                 <select
-                  value={unit}
+                  value={category}
                   onChange={(e) => {
-                    setUnit(e.target.value);
+                    setCategory(e.target.value);
 
                     setFieldErrors((current) => ({
                       ...current,
-                      unit: "",
+                      category: "",
                     }));
                   }}
                   required
                   className={`w-full rounded-2xl border bg-white/80 px-4 py-3 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 ${
-                    fieldErrors.unit ? "border-red-300" : "border-slate-200"
+                    fieldErrors.category ? "border-red-300" : "border-slate-200"
                   }`}
                 >
-                  <option value="">Select unit</option>
-
-                  <option value="servings">Servings</option>
-
-                  <option value="kg">Kg</option>
-
-                  <option value="liters">Liters</option>
-
-                  <option value="packets">Packets</option>
-
-                  <option value="pieces">Pieces</option>
+                  <option value="">Select category</option>
+                  <option value="cooked-meal">Cooked Meal</option>
+                  <option value="bakery">Bakery</option>
+                  <option value="fruits">Fruits</option>
+                  <option value="vegetables">Vegetables</option>
+                  <option value="packaged-food">Packaged Food</option>
+                  <option value="other">Other</option>
                 </select>
 
-                {fieldErrors.unit && (
+                {fieldErrors.category && (
                   <p className="mt-1.5 text-xs font-medium text-red-500">
-                    {fieldErrors.unit}
+                    {fieldErrors.category}
                   </p>
                 )}
               </div>
-            </div>
 
-            {/* Prepared + Deadline */}
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <DateTimeField
-                label="When was the food prepared?"
-                value={preparedAt}
-                onChange={(value) => {
-                  setPreparedAt(value);
+              {/* Quantity + Unit */}
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                    Quantity
+                  </label>
 
-                  setFieldErrors((current) => ({
-                    ...current,
-                    preparedAt: "",
-                    pickupDeadline: "",
-                  }));
-                }}
-                icon={Clock}
-                maxDateTime={now}
-                error={fieldErrors.preparedAt}
-              />
+                  <div
+                    className={`flex items-center gap-3 rounded-2xl border bg-white/80 px-4 py-3 transition ${
+                      fieldErrors.quantity
+                        ? "border-red-300"
+                        : "border-slate-200 focus-within:border-[#16796f] focus-within:ring-2 focus-within:ring-[#16796f]/10"
+                    }`}
+                  >
+                    <Package size={18} className="shrink-0 text-[#4f81b7]" />
 
-              <DateTimeField
-                label="Pickup available until"
-                value={pickupDeadline}
-                onChange={(value) => {
-                  setPickupDeadline(value);
+                    <input
+                      type="number"
+                      min="1"
+                      step="any"
+                      placeholder="e.g. 20"
+                      value={quantity}
+                      onChange={(e) => {
+                        setQuantity(e.target.value);
 
-                  setFieldErrors((current) => ({
-                    ...current,
-                    pickupDeadline: "",
-                  }));
-                }}
-                icon={Calendar}
-                minDateTime={preparedAt || now}
-                error={fieldErrors.pickupDeadline}
-              />
-            </div>
+                        setFieldErrors((current) => ({
+                          ...current,
+                          quantity: "",
+                        }));
+                      }}
+                      required
+                      className="min-w-0 w-full bg-transparent outline-none placeholder:text-slate-400"
+                    />
+                  </div>
 
-            {/* Pickup Location */}
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                Pickup location
-              </label>
+                  {fieldErrors.quantity && (
+                    <p className="mt-1.5 text-xs font-medium text-red-500">
+                      {fieldErrors.quantity}
+                    </p>
+                  )}
+                </div>
 
-              <div
-                className={`flex items-center gap-3 rounded-2xl border bg-white/80 px-4 py-3 transition ${
-                  fieldErrors.address
-                    ? "border-red-300"
-                    : "border-slate-200 focus-within:border-[#16796f] focus-within:ring-2 focus-within:ring-[#16796f]/10"
-                }`}
-              >
-                <MapPin size={18} className="shrink-0 text-[#4f81b7]" />
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                    Unit
+                  </label>
 
-                <input
-                  type="text"
-                  placeholder="Enter pickup address"
-                  value={address}
-                  onChange={(e) => {
-                    setAddress(e.target.value);
+                  <select
+                    value={unit}
+                    onChange={(e) => {
+                      setUnit(e.target.value);
 
-                    /*
-                      The previous coordinates belong to the
-                      previous address, so invalidate them.
-                    */
-                    setLocationCoordinates({
-                      latitude: null,
-                      longitude: null,
-                    });
+                      setFieldErrors((current) => ({
+                        ...current,
+                        unit: "",
+                      }));
+                    }}
+                    required
+                    className={`w-full rounded-2xl border bg-white/80 px-4 py-3 outline-none transition focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10 ${
+                      fieldErrors.unit ? "border-red-300" : "border-slate-200"
+                    }`}
+                  >
+                    <option value="">Select unit</option>
+                    <option value="servings">Servings</option>
+                    <option value="kg">Kg</option>
+                    <option value="liters">Liters</option>
+                    <option value="packets">Packets</option>
+                    <option value="pieces">Pieces</option>
+                  </select>
+
+                  {fieldErrors.unit && (
+                    <p className="mt-1.5 text-xs font-medium text-red-500">
+                      {fieldErrors.unit}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Prepared + Deadline */}
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <DateTimeField
+                  label="When was the food prepared?"
+                  value={preparedAt}
+                  onChange={(value) => {
+                    setPreparedAt(value);
 
                     setFieldErrors((current) => ({
                       ...current,
-                      address: "",
+                      preparedAt: "",
+                      pickupDeadline: "",
                     }));
-
-                    setError("");
                   }}
-                  onBlur={handleGeocodeAddress}
-                  required
-                  className="w-full bg-transparent outline-none placeholder:text-slate-400"
+                  icon={Clock}
+                  maxDateTime={now}
+                  error={fieldErrors.preparedAt}
+                />
+
+                <DateTimeField
+                  label="Pickup available until"
+                  value={pickupDeadline}
+                  onChange={(value) => {
+                    setPickupDeadline(value);
+
+                    setFieldErrors((current) => ({
+                      ...current,
+                      pickupDeadline: "",
+                    }));
+                  }}
+                  icon={Calendar}
+                  minDateTime={preparedAt || now}
+                  error={fieldErrors.pickupDeadline}
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                disabled={locationLoading || loading}
-                className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#4f81b7]/30 bg-white/70 px-4 py-2.5 text-sm font-semibold text-[#0b306b] transition hover:border-[#16796f] hover:bg-[#eef7f6] hover:text-[#16796f] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Navigation
-                  size={16}
-                  className={locationLoading ? "animate-pulse" : ""}
-                />
+              {/* Pickup Location */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                  Pickup location
+                </label>
 
-                {locationLoading
-                  ? "Finding pickup location..."
-                  : "Use Current Location"}
-              </button>
+                <div
+                  className={`flex items-center gap-3 rounded-2xl border bg-white/80 px-4 py-3 transition ${
+                    fieldErrors.address
+                      ? "border-red-300"
+                      : "border-slate-200 focus-within:border-[#16796f] focus-within:ring-2 focus-within:ring-[#16796f]/10"
+                  }`}
+                >
+                  <MapPin size={18} className="shrink-0 text-[#4f81b7]" />
 
-              {locationCoordinates.latitude !== null &&
-                locationCoordinates.longitude !== null && (
-                  <div className="mt-2 flex items-center gap-2 text-xs font-medium text-[#16796f]">
-                    <span className="h-2 w-2 rounded-full bg-[#16796f]" />
-                    Pickup location mapped successfully
-                  </div>
-                )}
+                  <input
+                    type="text"
+                    placeholder="Enter pickup address"
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
 
-              {fieldErrors.address && (
-                <p className="mt-1.5 text-xs font-medium text-red-500">
-                  {fieldErrors.address}
-                </p>
-              )}
-            </div>
+                      setLocationCoordinates({
+                        latitude: null,
+                        longitude: null,
+                      });
 
-            {/* Description */}
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                Description
-              </label>
+                      setFieldErrors((current) => ({
+                        ...current,
+                        address: "",
+                      }));
 
-              <textarea
-                rows="4"
-                maxLength="500"
-                placeholder="Add useful information such as freshness, packaging, allergens, or pickup instructions..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full resize-none rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
-              />
+                      setError("");
+                    }}
+                    onBlur={handleGeocodeAddress}
+                    required
+                    className="min-w-0 w-full bg-transparent outline-none placeholder:text-slate-400"
+                  />
+                </div>
 
-              <div className="mt-1 flex justify-end text-xs text-slate-400">
-                {description.length}/500
-              </div>
-            </div>
-
-            {/* Image */}
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
-                Food image
-              </label>
-
-              {imagePreview ? (
-                <div className="relative overflow-hidden rounded-2xl border border-[#4f81b7]/30 bg-white/60">
-                  <img
-                    src={imagePreview}
-                    alt="Selected food preview"
-                    className="h-56 w-full object-cover"
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={locationLoading || loading}
+                  className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#4f81b7]/30 bg-white/70 px-4 py-2.5 text-sm font-semibold text-[#0b306b] transition hover:border-[#16796f] hover:bg-[#eef7f6] hover:text-[#16796f] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Navigation
+                    size={16}
+                    className={locationLoading ? "animate-pulse" : ""}
                   />
 
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute right-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 text-[#0b306b] shadow-md transition hover:bg-red-50 hover:text-red-500"
-                    aria-label="Remove selected image"
-                  >
-                    <X size={17} />
-                  </button>
+                  {locationLoading
+                    ? "Finding pickup location..."
+                    : "Use Current Location"}
+                </button>
 
-                  <div className="bg-white/90 px-4 py-3 backdrop-blur-sm">
-                    <p className="truncate text-sm font-semibold text-[#0b306b]">
-                      {selectedImage?.name}
+                {locationCoordinates.latitude !== null &&
+                  locationCoordinates.longitude !== null && (
+                    <div className="mt-2 flex items-center gap-2 text-xs font-medium text-[#16796f]">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#16796f]" />
+                      <span>Pickup location mapped successfully</span>
+                    </div>
+                  )}
+
+                {fieldErrors.address && (
+                  <p className="mt-1.5 text-xs font-medium text-red-500">
+                    {fieldErrors.address}
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                  Description
+                </label>
+
+                <textarea
+                  rows="4"
+                  maxLength="500"
+                  placeholder="Add useful information such as freshness, packaging, allergens, or pickup instructions..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full resize-none rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#16796f] focus:ring-2 focus:ring-[#16796f]/10"
+                />
+
+                <div className="mt-1 flex justify-end text-xs text-slate-400">
+                  {description.length}/500
+                </div>
+              </div>
+
+              {/* Image */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold text-[#0b306b]">
+                  Food image
+                </label>
+
+                {imagePreview ? (
+                  <div className="relative overflow-hidden rounded-2xl border border-[#4f81b7]/30 bg-white/60">
+                    <img
+                      src={imagePreview}
+                      alt="Selected food preview"
+                      className="h-48 w-full object-cover sm:h-56"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute right-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 text-[#0b306b] shadow-md transition hover:bg-red-50 hover:text-red-500"
+                      aria-label="Remove selected image"
+                    >
+                      <X size={17} />
+                    </button>
+
+                    <div className="bg-white/90 px-4 py-3 backdrop-blur-sm">
+                      <p className="truncate text-sm font-semibold text-[#0b306b]">
+                        {selectedImage?.name}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        Image selected successfully
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#4f81b7]/40 bg-white/50 px-4 py-8 text-center transition hover:border-[#16796f] hover:bg-[#eef7f6] sm:px-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
+                      <ImagePlus size={22} />
+                    </div>
+
+                    <p className="mt-3 font-semibold text-[#0b306b]">
+                      Upload a food photo
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      Image selected successfully
+                      JPG, PNG or WEBP • Max 5 MB
                     </p>
-                  </div>
-                </div>
-              ) : (
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#4f81b7]/40 bg-white/50 px-6 py-8 text-center transition hover:border-[#16796f] hover:bg-[#eef7f6]">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdd8a5] text-[#0b306b]">
-                    <ImagePlus size={22} />
-                  </div>
 
-                  <p className="mt-3 font-semibold text-[#0b306b]">
-                    Upload a food photo
-                  </p>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    JPG, PNG or WEBP • Max 5 MB
-                  </p>
-
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
-
-              <p className="mt-2 text-xs text-slate-400">
-                A clear photo helps NGOs understand what is available.
-              </p>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="mt-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-                {error}
-              </div>
-            )}
-
-            {/* Success */}
-            {success && (
-              <div className="mt-5 rounded-2xl border border-[#b9ded8] bg-[#dcefeb] px-4 py-3 text-sm font-medium text-[#16796f]">
-                {success}
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || locationLoading}
-              className="mt-7 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] py-4 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#16796f] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-            >
-              <Send size={18} />
-
-              {loading
-                ? "Posting Donation..."
-                : locationLoading
-                  ? "Finding Pickup Location..."
-                  : "Post Donation"}
-            </button>
-          </form>
-
-          {/* Side Information */}
-          <div className="space-y-6">
-            <div className="relative min-h-[280px] overflow-hidden rounded-[2rem] bg-[#16796f] p-7 text-white shadow-xl">
-              <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-[#fdd8a5]/30 blur-2xl" />
-
-              <div className="relative z-10">
-                <div className="text-7xl">🍲</div>
-
-                <h2 className="mt-6 text-2xl font-bold">
-                  Good food shouldn't go to waste.
-                </h2>
-
-                <p className="mt-3 text-sm leading-6 text-teal-50">
-                  Add clear information so nearby NGOs can understand what is
-                  available and when they can collect it.
+                <p className="mt-2 text-xs text-slate-400">
+                  A clear photo helps NGOs understand what is available.
                 </p>
               </div>
-            </div>
 
-            <div className="rounded-[2rem] border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
-              <h3 className="font-bold text-[#0b306b]">Before posting</h3>
+              {/* Error */}
+              {error && (
+                <div className="mt-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                  {error}
+                </div>
+              )}
 
-              <div className="mt-4 space-y-3 text-sm text-slate-600">
-                <p>✓ Mention the correct quantity.</p>
-                <p>✓ Add a realistic pickup deadline.</p>
-                <p>✓ Upload a clear food photo.</p>
-                <p>✓ Keep the pickup location accurate.</p>
+              {/* Success */}
+              {success && (
+                <div className="mt-5 rounded-2xl border border-[#b9ded8] bg-[#dcefeb] px-4 py-3 text-sm font-medium text-[#16796f]">
+                  {success}
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading || locationLoading}
+                className="mt-7 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[#0b306b] py-4 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#16796f] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              >
+                <Send size={18} />
+
+                {loading
+                  ? "Posting Donation..."
+                  : locationLoading
+                    ? "Finding Pickup Location..."
+                    : "Post Donation"}
+              </button>
+            </form>
+
+            {/* Side Information */}
+            <div className="space-y-6">
+              <div className="relative min-h-[240px] overflow-hidden rounded-[2rem] bg-[#16796f] p-6 text-white shadow-xl sm:min-h-[280px] sm:p-7">
+                <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-[#fdd8a5]/30 blur-2xl" />
+
+                <div className="relative z-10">
+                  <div className="text-7xl">🍲</div>
+
+                  <h2 className="mt-6 text-2xl font-bold">
+                    Good food shouldn't go to waste.
+                  </h2>
+
+                  <p className="mt-3 text-sm leading-6 text-teal-50">
+                    Add clear information so nearby NGOs can understand what is
+                    available and when they can collect it.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="rounded-[2rem] border border-[#fdd8a5]/50 bg-[#fff8ed] p-6">
-              <p className="text-sm font-semibold text-[#0b306b]">
-                Food safety matters
-              </p>
+              <div className="rounded-[2rem] border border-white/70 bg-white/65 p-6 shadow-sm backdrop-blur-xl">
+                <h3 className="font-bold text-[#0b306b]">Before posting</h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Accurate preparation and pickup times help NGOs make safer
-                decisions about surplus food.
-              </p>
+                <div className="mt-4 space-y-3 text-sm text-slate-600">
+                  <p>✓ Mention the correct quantity.</p>
+                  <p>✓ Add a realistic pickup deadline.</p>
+                  <p>✓ Upload a clear food photo.</p>
+                  <p>✓ Keep the pickup location accurate.</p>
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] border border-[#fdd8a5]/50 bg-[#fff8ed] p-6">
+                <p className="text-sm font-semibold text-[#0b306b]">
+                  Food safety matters
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Accurate preparation and pickup times help NGOs make safer
+                  decisions about surplus food.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
