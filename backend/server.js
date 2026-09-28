@@ -23,9 +23,10 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: ["https://food-rescue-zeta.vercel.app", "http://localhost:5173"],
   },
 });
+
 const Delivery = require("./models/Delivery");
 const Donation = require("./models/Donation");
 
@@ -96,9 +97,7 @@ io.on("connection", (socket) => {
       }
 
       const isVolunteer = delivery.volunteer?.toString() === userId;
-
       const isNgo = delivery.ngo?.toString() === userId;
-
       const isDonor = donation.donor?.toString() === userId;
 
       if (!isVolunteer && !isNgo && !isDonor) {
@@ -133,6 +132,7 @@ io.on("connection", (socket) => {
       latitude,
       longitude,
     });
+
     try {
       if (!deliveryId || latitude == null || longitude == null) {
         return;
@@ -157,12 +157,14 @@ io.on("connection", (socket) => {
       if (!socket.data.isVolunteer) {
         return;
       }
+
       console.log(
         "VOLUNTEER LOCATION RECEIVED:",
         deliveryId,
         latitude,
         longitude,
       );
+
       socket.to(`delivery-${deliveryId}`).emit("volunteer-location", {
         latitude,
         longitude,
@@ -176,8 +178,14 @@ io.on("connection", (socket) => {
     console.log("Socket disconnected:", socket.id);
   });
 });
+
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://food-rescue-zeta.vercel.app", "http://localhost:5173"],
+  }),
+);
+
 app.use(express.json());
 
 // Routes
