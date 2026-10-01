@@ -1,522 +1,163 @@
-**# FoodRescue**
+# FoodRescue
 
+### Smart Surplus Food Redistribution Platform
 
+FoodRescue is a full-stack web application that connects food donors, NGOs, and volunteers to coordinate the redistribution of surplus food.
 
-**### Smart Surplus Food Redistribution Platform**
+It manages the complete workflow from food donation and NGO requests to volunteer pickup, real-time delivery tracking, and OTP-based delivery verification.
 
+[Live Demo](https://food-rescue-zeta.vercel.app) · [GitHub Repository](https://github.com/SejalM00N/FoodRescue)
 
+## How It Works
 
-**FoodRescue is a full-stack web application that connects food donors, NGOs, and volunteers to reduce food waste and help redistribute surplus food to people in need.**
+Donor creates a food donation  
+↓  
+NGO discovers and requests the donation  
+↓  
+Donor accepts the request  
+↓  
+Volunteer accepts the pickup  
+↓  
+Volunteer shares live location  
+↓  
+Food is picked up and delivered  
+↓  
+NGO verifies delivery using OTP
+
+## Key Features
+
+### Role-Based Workflows
+
+- Donor — create donations, manage NGO requests, and track donation status
+- NGO — find available food, request donations, track deliveries, and verify completed deliveries
+- Volunteer — accept pickups, navigate to locations, share live location, and complete deliveries
+
+### Real-Time Delivery Tracking
+
+Implemented real-time volunteer location tracking using Socket.IO.
+
+- Volunteer location is shared during an active delivery
+- NGO receives location updates in real time
+- Delivery-specific Socket.IO rooms isolate tracking sessions
+- Socket authentication is required before joining a tracking room
+
+### Maps and Navigation
+
+- Leaflet for interactive maps
+- OpenStreetMap for map data
+- OSRM for route calculation
+- Pickup and delivery locations displayed on the map
+
+### Secure Delivery Verification
+
+- Secure OTP generation on the backend
+- Volunteer completes the delivery
+- NGO verifies the delivery using OTP
+- Delivery status changes after successful verification
 
+### Authentication and Security
 
+- JWT-based authentication
+- Password hashing using bcryptjs
+- Role-based authorization
+- Protected API routes
+- Ownership and delivery-state validation
+- Input and coordinate validation
+- Production CORS restrictions
+- Environment variables for sensitive credentials
 
-**The platform manages the complete journey of surplus food — from donation and NGO request to volunteer pickup, live delivery tracking, and final OTP verification.**
+### Food Image Uploads
 
+Food images are handled using Multer and stored in Cloudinary.
 
+## Technology Stack
 
-**## Live Demo**
+| Area           | Technologies                             |
+| -------------- | ---------------------------------------- |
+| Frontend       | React.js, JavaScript, Vite, Tailwind CSS |
+| Routing & HTTP | React Router, Axios                      |
+| Backend        | Node.js, Express.js                      |
+| Database       | MongoDB Atlas, Mongoose                  |
+| Authentication | JWT, bcryptjs                            |
+| Real-Time      | Socket.IO                                |
+| Image Storage  | Cloudinary, Multer                       |
+| Maps           | Leaflet, OpenStreetMap                   |
+| Routing        | OSRM                                     |
+| Deployment     | Vercel, Render                           |
 
+## Architecture
 
+React + Vite Frontend  
+↓  
+Express REST API  
+↓  
+MongoDB Atlas
 
-**https://food-rescue-zeta.vercel.app**
+Supporting services:
 
+- Socket.IO for real-time delivery tracking
+- Cloudinary for food image storage
+- Leaflet and OpenStreetMap for maps
+- OSRM for route calculation
 
+## Project Structure
 
-**## GitHub Repository**
+```text
+FoodRescue/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── pages/          # Application pages
+│   │   ├── context/        # Authentication and shared state
+│   │   ├── services/       # API/service logic
+│   │   ├── assets/         # Images and frontend assets
+│   │   └── main.jsx
+│   ├── public/
+│   └── package.json
+│
+├── backend/
+│   ├── config/             # External service configuration
+│   ├── controllers/        # Application/business logic
+│   ├── middleware/         # Authentication, roles, uploads
+│   ├── models/             # MongoDB/Mongoose models
+│   ├── routes/             # REST API routes
+│   ├── server.js
+│   └── package.json
+│
+├── README.md
+└── .gitignore
+```
 
+## Deployment
 
+- Frontend — Vercel
+- Backend — Render
+- Database — MongoDB Atlas
+- Image Storage — Cloudinary
 
-**https://github.com/SejalM00N/FoodRescue**
+## Run Locally
 
+Clone the repository:
 
+git clone https://github.com/SejalM00N/FoodRescue.git
 
-**## How FoodRescue Works**
+cd FoodRescue
 
+Backend:
 
+cd backend
 
-**Donor posts surplus food**  
+npm install
 
-**↓**  
+npm start
 
-**NGO discovers and requests the food**  
+Frontend:
 
-**↓**  
+cd frontend
 
-**Donor accepts the request**  
+npm install
 
-**↓**  
+npm run dev
 
-**Volunteer accepts the pickup**  
-
-**↓**  
-
-**Volunteer location is tracked in real time**  
-
-**↓**  
-
-**Volunteer picks up and delivers the food**  
-
-**↓**  
-
-**NGO verifies the delivery using OTP**  
-
-**↓**  
-
-**Donation is completed**
-
-
-
-**## Key Features**
-
-
-
-**### Donor**
-
-
-
-**• Create surplus food donations**  
-
-**• Upload food images**  
-
-**• Add quantity, pickup location, expiry time, and food details**  
-
-**• View donation requests**  
-
-**• Accept or reject NGO requests**  
-
-**• Track donation status**
-
-
-
-**### NGO**
-
-
-
-**• Browse available food donations**  
-
-**• Request surplus food**  
-
-**• View request status**  
-
-**• Track active deliveries**  
-
-**• View volunteer location in real time**  
-
-**• Verify completed deliveries using OTP**
-
-
-
-**### Volunteer**
-
-
-
-**• View available pickup requests**  
-
-**• Accept delivery assignments**  
-
-**• View pickup and delivery locations**  
-
-**• Navigate using maps and routing**  
-
-**• Share live location during delivery**  
-
-**• Mark food as picked up and delivered**  
-
-**• Complete delivery through NGO OTP verification**
-
-
-
-**## Real-Time Delivery Tracking**
-
-
-
-**FoodRescue uses Socket.IO for real-time communication between volunteers and NGOs.**
-
-
-
-**During an active delivery:**
-
-
-
-**• Volunteer location is continuously shared**  
-
-**• NGO receives location updates in real time**  
-
-**• Delivery-specific Socket.IO rooms keep tracking isolated**  
-
-**• Authentication is required before joining tracking rooms**
-
-
-
-**## Maps and Navigation**
-
-
-
-**The application uses:**
-
-
-
-**• Leaflet for interactive maps**  
-
-**• OpenStreetMap for map data**  
-
-**• OSRM for route calculation and navigation**
-
-
-
-**This allows volunteers and NGOs to visualize pickup locations, delivery locations, and active routes.**
-
-
-
-**## Image Uploads**
-
-
-
-**Food donation images are uploaded using:**
-
-
-
-**• Multer for handling multipart form data**  
-
-**• Cloudinary for cloud-based image storage**
-
-
-
-**Uploaded images are associated with the corresponding food donation.**
-
-
-
-**## Authentication and Security**
-
-
-
-**FoodRescue implements:**
-
-
-
-**• JWT-based authentication**  
-
-**• Password hashing using bcryptjs**  
-
-**• Role-based authorization**  
-
-**• Protected API routes**  
-
-**• Ownership validation for sensitive operations**  
-
-**• Input validation for coordinates and user data**  
-
-**• Secure OTP generation**  
-
-**• Production CORS restrictions**  
-
-**• Environment variables for sensitive credentials**
-
-
-
-**Supported roles:**
-
-
-
-**Donor**  
-
-**NGO**  
-
-**Volunteer**
-
-
-
-**## Technology Stack**
-
-
-
-**Frontend**
-
-
-
-**React.js**  
-
-**JavaScript**  
-
-**Vite**  
-
-**Tailwind CSS**  
-
-**React Router**  
-
-**Axios**  
-
-**Lucide React**
-
-
-
-**Backend**
-
-
-
-**Node.js**  
-
-**Express.js**  
-
-**MongoDB**  
-
-**Mongoose**  
-
-**JWT**  
-
-**bcryptjs**  
-
-**Socket.IO**
-
-
-
-**Services and APIs**
-
-
-
-**MongoDB Atlas**  
-
-**Cloudinary**  
-
-**Leaflet**  
-
-**OpenStreetMap**  
-
-**OSRM**  
-
-**Vercel**  
-
-**Render**
-
-
-
-**## Project Architecture**
-
-
-
-**FoodRescue follows a client-server architecture.**
-
-
-
-**Frontend**  
-
-**→ React + Vite application**
-
-
-
-**Backend**  
-
-**→ Node.js + Express REST API**
-
-
-
-**Database**  
-
-**→ MongoDB Atlas**
-
-
-
-**Real-Time Layer**  
-
-**→ Socket.IO**
-
-
-
-**Image Storage**  
-
-**→ Cloudinary**
-
-
-
-**Maps**  
-
-**→ Leaflet + OpenStreetMap**
-
-
-
-**Routing**  
-
-**→ OSRM**
-
-
-
-**## Project Structure**
-
-
-
-**FoodRescue/**
-
-
-
-**├── frontend/**  
-
-**│   ├── src/**  
-
-**│   ├── public/**  
-
-**│   └── package.json**  
-
-**│**
-
-**├── backend/**  
-
-**│   ├── controllers/**  
-
-**│   ├── middleware/**  
-
-**│   ├── models/**  
-
-**│   ├── routes/**  
-
-**│   ├── config/**  
-
-**│   └── server.js**  
-
-**│**
-
-**├── README.md**  
-
-**└── .gitignore**
-
-
-
-**## Running Locally**
-
-
-
-**Clone the repository:**
-
-
-
-**git clone https://github.com/SejalM00N/FoodRescue.git**
-
-
-
-**Open the project:**
-
-
-
-**cd FoodRescue**
-
-
-
-**### Backend**
-
-
-
-**cd backend**
-
-
-
-**npm install**
-
-
-
-**Create a `.env` file containing the required MongoDB, JWT, and Cloudinary configuration.**
-
-
-
-**Start the backend:**
-
-
-
-**npm start**
-
-
-
-**### Frontend**
-
-
-
-**Open another terminal:**
-
-
-
-**cd frontend**
-
-
-
-**npm install**
-
-
-
-**npm run dev**
-
-
-
-**The frontend will run on the Vite development server.**
-
-
-
-**## Deployment**
-
-
-
-**Frontend is deployed using Vercel.**
-
-
-
-**Backend is deployed using Render.**
-
-
-
-**MongoDB database is hosted using MongoDB Atlas.**
-
-
-
-**Cloudinary is used for image storage.**
-
-
-
-**## Project Highlights**
-
-
-
-**• Complete donor → NGO → volunteer workflow**  
-
-**• Role-based dashboards and authorization**  
-
-**• Real-time volunteer location tracking**  
-
-**• Interactive maps and route calculation**  
-
-**• Cloud image uploads**  
-
-**• OTP-based delivery verification**  
-
-**• Responsive design for desktop, tablet, and mobile**  
-
-**• Production deployment with Vercel and Render**  
-
-**• Secure authentication and protected API endpoints**
-
-
-
-**## Future Improvements**
-
-
-
-**• Push notifications for new donation requests**  
-
-**• Improved volunteer matching based on distance**  
-
-**• Donation analytics and impact reports**  
-
-**• NGO verification system**  
-
-**• Email and SMS notifications**  
-
-**• Advanced food expiry alerts**
-
-
-
-**## Author**
-
-
-
-**Sejal M**
-
-
-
-**B.Tech Computer Science \& Engineering**
-
+Create the required backend environment variables for MongoDB, JWT, and Cloudinary before starting the server.
